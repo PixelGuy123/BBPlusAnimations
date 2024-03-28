@@ -9,5 +9,7 @@ namespace BBPlusAnimations.Components
 
 		[SerializeField]
 		public Texture2D[] defaultTex;
+
+		public Material[] ogTexs = new Material[2];
 	}
 }

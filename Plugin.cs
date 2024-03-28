@@ -10,6 +10,9 @@ using PixelInternalAPI.Components;
 using System.IO;
 using BBPlusAnimations.Patches;
 using BBPlusAnimations.Components;
+using PixelInternalAPI.Extensions;
+using UnityEngine.UI;
+using MTM101BaldAPI.Reflection;
 
 namespace BBPlusAnimations
 {
@@ -33,8 +36,19 @@ namespace BBPlusAnimations
 		
 		void OnAssetLoad()
 		{
+
 			// Sprite Billboard object
-			var baseSprite = new GameObject("SpriteNoBillBoard").AddComponent<SpriteRenderer>();
+			var baseSprite = new GameObject("SpriteBillBoard").AddComponent<SpriteRenderer>();
+			baseSprite.material = Resources.FindObjectsOfTypeAll<Material>().First(x => x.name == "SpriteStandard_Billboard" && x.GetInstanceID() > 0);
+			baseSprite.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+			baseSprite.receiveShadows = false;
+
+			baseSprite.gameObject.layer = LayerStorage.billboardLayer;
+			DontDestroyOnLoad(baseSprite.gameObject);
+			man.Add("SpriteBillboardTemplate", baseSprite.gameObject);
+
+			// Sprite NO Billboard object
+			baseSprite = new GameObject("SpriteNoBillBoard").AddComponent<SpriteRenderer>();
 			baseSprite.material = Resources.FindObjectsOfTypeAll<Material>().First(x => x.name == "SpriteStandard_NoBillboard" && x.GetInstanceID() > 0);
 			baseSprite.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
 			baseSprite.receiveShadows = false;
@@ -53,6 +67,7 @@ namespace BBPlusAnimations
 			gum.layer = LayerStorage.billboardLayer;
 			gum.transform.SetParent(gumHolder.transform);
 			gum.transform.localPosition = Vector3.zero;
+			gum.SetActive(true);
 
 			gum = Instantiate(man.Get<GameObject>("SpriteNoBillboardTemplate")); // Back of the gum
 			gum.GetComponent<SpriteRenderer>().sprite = AssetLoader.SpriteFromTexture2D(
@@ -60,6 +75,8 @@ namespace BBPlusAnimations
 				, 25f);
 			gum.transform.SetParent(gumHolder.transform);
 			gum.transform.localPosition = Vector3.zero + gum.transform.forward * -0.01f;
+			gum.SetActive(true);
+
 			gumHolder.SetActive(false);
 			DontDestroyOnLoad(gumHolder);
 
@@ -80,6 +97,41 @@ namespace BBPlusAnimations
 				NumberBalloonPatch.explodeVisuals[i] = AssetLoader.SpriteFromTexture2D(AssetLoader.TextureFromFile(Path.Combine(ModPath, $"balExplode_{i}.png")), 30f);
 			NumberBalloonPatch.sound = ObjectCreators.CreateSoundObject(AssetLoader.AudioClipFromFile(Path.Combine(ModPath, "BalloonRespawn.wav")), "something", SoundType.Voice, Color.white);
 			NumberBalloonPatch.sound.subtitle = false; // No sub
+
+			// TheTestAnimation
+
+			var canvas = Instantiate(Resources.FindObjectsOfTypeAll<Canvas>().First(x => x.name == "GumOverlay")); // Only way to make a proper overlay on this
+
+			var img = canvas.transform.Find("Image").GetComponent<Image>();
+
+			DontDestroyOnLoad(canvas);
+			canvas.gameObject.SetActive(false);
+
+
+			TheTestPatch.sprites = new Sprite[7];
+
+			TheTestPatch.sprites[0] = AssetLoader.SpriteFromTexture2D(TextureExtensions.CreateSolidTexture(480, 360, Color.black), 1f);
+			for (int i = 1; i < TheTestPatch.sprites.Length; i++)
+				TheTestPatch.sprites[i] = AssetLoader.SpriteFromTexture2D(AssetLoader.TextureFromFile(Path.Combine(ModPath, $"theTestblind_{i - 3}.png")), 1f);
+
+			img.name = "TheTestOverlay";
+			TheTestPatch.img = img;
+			canvas.name = "TheTestOverlayCanvas";
+			TheTestPatch.canvas = canvas;
+
+			// Jumprope Sprites
+			PlaytimeJumpropePatch.sprites = new Sprite[6];
+			for (int i = 0; i < PlaytimeJumpropePatch.sprites.Length; i++)
+				PlaytimeJumpropePatch.sprites[i] = AssetLoader.SpriteFromTexture2D(AssetLoader.TextureFromFile(Path.Combine(ModPath, $"jmpropecut_{i}.png")), 1f);
+
+			// Baldi Haha
+			var baldi = Instantiate(man.Get<GameObject>("SpriteBillboardTemplate")).AddComponent<BaldiFloatsAway>();
+			baldi.name = "BaldiTheFloater";
+			baldi.renderer = baldi.GetComponent<SpriteRenderer>();
+			baldi.sprites = (Sprite[])Resources.FindObjectsOfTypeAll<BaldiDance>()[0].ReflectionGetVariable("danceSprites"); // First time I'm using the api reflection lol
+			DontDestroyOnLoad(baldi.gameObject);
+			baldi.gameObject.SetActive(false);
+			HappyBaldiPatch.baldi = baldi;
 			
 		}
 

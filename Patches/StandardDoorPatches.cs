@@ -3,6 +3,7 @@ using HarmonyLib;
 using PixelInternalAPI.Extensions;
 using System.Collections.Generic;
 using UnityEngine;
+using static System.Net.Mime.MediaTypeNames;
 
 namespace BBPlusAnimations.Patches
 {
@@ -18,6 +19,7 @@ namespace BBPlusAnimations.Patches
 
 			
 			Material mat = new(__instance.overlayShut[0]);
+			comp.ogTexs = __instance.overlayShut;
 			var tex = (Texture2D)mat.mainTexture;
 			int idx = invertedTextures.Contains(tex.name) ? 1 : 0;
 			if (storedTextures.ContainsKey(tex.name)) // Basically cache the textures and re-use them when replaying the game
@@ -62,15 +64,22 @@ namespace BBPlusAnimations.Patches
 			var comp = __instance.GetComponent<StandardDoorExtraMaterials>();
 			if (comp == null) return;
 
-			var texs = __instance.overlayShut;
 			__instance.overlayShut = comp.doorLockedMat;
-			__instance.UpdateTextures();
-			__instance.overlayShut = texs;
+			if (!__instance.open)
+				__instance.UpdateTextures(); // Just update it back anyways
 		}
 
 		[HarmonyPatch("Unlock")]
 		[HarmonyPrefix]
-		private static void UnlockOverride(StandardDoor __instance) => __instance.UpdateTextures(); // Just update it back anyways
+		private static void UnlockOverride(StandardDoor __instance)
+		{
+			var comp = __instance.GetComponent<StandardDoorExtraMaterials>();
+			if (comp == null) return;
+
+			__instance.overlayShut = comp.ogTexs;
+			if (!__instance.open)
+				__instance.UpdateTextures(); // Just update it back anyways
+		}
 
 		static readonly Dictionary<string, Texture2D> storedTextures = [];
 

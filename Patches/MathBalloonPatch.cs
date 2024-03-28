@@ -11,25 +11,11 @@ namespace BBPlusAnimations.Patches
 	{
 		[HarmonyPatch("Start")]
 		[HarmonyPostfix]
-		private static void SpawnAnimation(MathMachineNumber __instance, Transform ___sprite, AudioManager ___audMan) =>
-			__instance.StartCoroutine(SpawnAnim(___sprite, ___audMan));
-
-		static IEnumerator SpawnAnim(Transform t, AudioManager audMan)
+		private static void SpawnAnimation(Transform ___sprite, AudioManager ___audMan)
 		{
-			audMan.FlushQueue(true);
-			audMan.PlaySingle(sound);
-			t.localScale = Vector3.zero;
-			float scale = 0f;
-			while (scale < 1f)
-			{
-				scale += (1f - scale) / 11f * 25f * Time.deltaTime * Singleton<BaseGameManager>.Instance.Ec.EnvironmentTimeScale;
-				t.localScale = Vector3.one * scale;
-				yield return null;
-			}
-			t.localScale = Vector3.one;
-			audMan.FadeOut(2f); // Maybe this works?
-
-			yield break;
+			___audMan.FlushQueue(true);
+			___audMan.PlaySingle(sound);
+			___sprite.localScale = Vector3.zero;
 		}
 
 		[HarmonyPatch("Pop")]
@@ -51,6 +37,7 @@ namespace BBPlusAnimations.Patches
 		{
 			if (!___popping)
 				__instance.StartCoroutine(Animation(___sprite.GetComponent<SpriteRenderer>()));
+			
 		}
 
 		static IEnumerator Animation(SpriteRenderer renderer)
@@ -59,7 +46,7 @@ namespace BBPlusAnimations.Patches
 			int idx = 0;
 			while (idx < explodeVisuals.Length)
 			{
-				frame += 25f * Time.deltaTime * Singleton<BaseGameManager>.Instance.Ec.EnvironmentTimeScale;
+				frame += 30f * Time.deltaTime * Singleton<BaseGameManager>.Instance.Ec.EnvironmentTimeScale;
 				idx = Mathf.FloorToInt(frame);
 				if (idx < explodeVisuals.Length)
 					renderer.sprite = explodeVisuals[idx];
@@ -68,6 +55,17 @@ namespace BBPlusAnimations.Patches
 
 			renderer.gameObject.SetActive(false);
 			yield break;
+		}
+
+		[HarmonyPatch("Update")]
+		private static void Prefix(Transform ___sprite)
+		{
+			float scale = ___sprite.localScale.y; // Just base in y
+			if (scale < 1f)
+			{
+				scale += (1f - scale) / 11f * 25f * Time.deltaTime * Singleton<BaseGameManager>.Instance.Ec.EnvironmentTimeScale;
+				___sprite.localScale = Vector3.one * scale;
+			}
 		}
 
 		internal static Sprite[] explodeVisuals;
