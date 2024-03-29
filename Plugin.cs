@@ -154,13 +154,14 @@ namespace BBPlusAnimations
 				comp.sprites[0] = x.spriteRenderer[0].sprite;
 				for (int i = 1; i < comp.sprites.Length; i++)
 					comp.sprites[i] = AssetLoader.SpriteFromTexture2D(AssetLoader.TextureFromFile(Path.Combine(ModPath, $"sweep_{i}.png")), 26f);
-				// JumpRope Quick Fix
-				Resources.FindObjectsOfTypeAll<Jumprope>().Do((x) =>
-				{
-					var comp = x.gameObject.AddComponent<GenericAnimationExtraComponent>();
-					comp.sprites = null; // No reference in this
-				});
 				
+			});
+
+			// JumpRope Quick Fix
+			Resources.FindObjectsOfTypeAll<Jumprope>().Do((x) =>
+			{
+				var comp = x.gameObject.AddComponent<GenericAnimationExtraComponent>();
+				comp.sprites = null; // No reference in this
 			});
 
 			// Gum overlay animation
@@ -177,6 +178,9 @@ namespace BBPlusAnimations
 			
 		}
 
+		// ******* Events for other mods (compat ones especifically) to override if needed ********
+
+
 		readonly AssetManager man = new();
 		
 
@@ -189,6 +193,6 @@ namespace BBPlusAnimations
 
 		public const string PLUGIN_NAME = "BB+ New Animations";
 
-		public const string PLUGIN_VERSION = "1.0.0";
+		public const string PLUGIN_VERSION = "1.0.0.1";
 	}
 }

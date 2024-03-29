@@ -30,10 +30,14 @@ namespace BBPlusAnimations.Patches
 			}
 			else
 			{
-				var readable = tex.MakeReadableTexture();
-				readable.OverlayTexture(comp.defaultTex[idx]);
-				storedTextures.Add(tex.name, readable);
-				mat.mainTexture = readable;
+				if (!tex.isReadable)
+				{
+					var readable = tex.MakeReadableTexture();
+					readable.OverlayTexture(comp.defaultTex[idx]);
+					storedTextures.Add(tex.name, readable);
+					mat.mainTexture = readable;
+				}
+				else storedTextures.Add(tex.name, tex);
 			}
 
 			Material mat2 = new(__instance.overlayShut[1]);
@@ -48,10 +52,14 @@ namespace BBPlusAnimations.Patches
 			}
 			else
 			{
-				var readable = tex.MakeReadableTexture();
-				readable.OverlayTexture(comp.defaultTex[idx]);
-				storedTextures.Add(tex.name, readable);
-				mat2.mainTexture = readable;
+				if (!tex.isReadable)
+				{
+					var readable = tex.MakeReadableTexture();
+					readable.OverlayTexture(comp.defaultTex[idx]);
+					storedTextures.Add(tex.name, readable);
+					mat2.mainTexture = readable;
+				}
+				else storedTextures.Add(tex.name, tex);
 			}
 
 			comp.doorLockedMat = [mat, mat2];
