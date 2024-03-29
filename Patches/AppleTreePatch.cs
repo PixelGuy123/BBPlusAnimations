@@ -40,11 +40,14 @@ namespace BBPlusAnimations.Patches
 
 		static IEnumerator Animation(Transform apple)
 		{
+			float speed = 0f;
 			float posOffset = 0f;
 			Vector3 ogPos = apple.transform.position;
 			while (true)
 			{
-				posOffset += (down - posOffset) / 3f * 15f * Time.deltaTime * Singleton<BaseGameManager>.Instance.Ec.EnvironmentTimeScale;
+				speed += Time.deltaTime * Singleton<BaseGameManager>.Instance.Ec.EnvironmentTimeScale;
+
+				posOffset += speed;
 				if (posOffset >= down - 0.01f)
 					break;
 
