@@ -30,6 +30,8 @@ namespace BBPlusAnimations
 			ModPath = AssetLoader.GetModPath(this);
 
 			LoadingEvents.RegisterOnAssetsLoaded(OnAssetLoad, false);
+
+			
 		}
 
 
@@ -57,6 +59,9 @@ namespace BBPlusAnimations
 			DontDestroyOnLoad(baseSprite.gameObject);
 			baseSprite.gameObject.SetActive(false);
 			man.Add("SpriteNoBillboardTemplate", baseSprite.gameObject);
+
+			// Overlay
+			man.Add("gumOverlay", Resources.FindObjectsOfTypeAll<Canvas>().First(x => x.name == "GumOverlay"));
 
 			// Gum
 			var gumHolder = new GameObject("gumSplash");
@@ -86,7 +91,11 @@ namespace BBPlusAnimations
 			GumSplash.splash = ObjectCreators.CreateSoundObject(AssetLoader.AudioClipFromFile(Path.Combine(ModPath, "gumSplash.wav")), "Vfx_GumSplash", SoundType.Voice, new(0.99609f, 0, 0.99609f));
 
 			// Bsoda particles
-			Resources.FindObjectsOfTypeAll<ITM_BSODA>().Do(x => x.transform.Find("RendereBase").Find("Particles").gameObject.SetActive(true));
+			Resources.FindObjectsOfTypeAll<ITM_BSODA>().Do((x) => {
+				var r = x.transform.Find("RendereBase").Find("Particles");
+				r.gameObject.SetActive(true);
+				r.transform.localPosition = Vector3.zero; // maybe this is the issue?
+				});
 
 			// Door
 			Resources.FindObjectsOfTypeAll<StandardDoor>().Do(d => d.gameObject.AddComponent<StandardDoorExtraMaterials>().defaultTex = [AssetLoader.TextureFromFile(Path.Combine(ModPath, "doorLock.png")), AssetLoader.TextureFromFile(Path.Combine(ModPath, "doorLock_left.png"))]);// Sets a lock
@@ -100,7 +109,7 @@ namespace BBPlusAnimations
 
 			// TheTestAnimation
 
-			var canvas = Instantiate(Resources.FindObjectsOfTypeAll<Canvas>().First(x => x.name == "GumOverlay")); // Only way to make a proper overlay on this
+			var canvas = Instantiate(man.Get<Canvas>("gumOverlay")); // Only way to make a proper overlay on this
 
 			var img = canvas.transform.Find("Image").GetComponent<Image>();
 
@@ -132,6 +141,39 @@ namespace BBPlusAnimations
 			DontDestroyOnLoad(baldi.gameObject);
 			baldi.gameObject.SetActive(false);
 			HappyBaldiPatch.baldi = baldi;
+
+			// Chalkles component
+			Resources.FindObjectsOfTypeAll<ChalkFace>().Do((x) => {
+				var comp = x.gameObject.AddComponent<GenericAnimationExtraComponent>();
+				comp.sprites[1] = AssetLoader.SpriteFromTexture2D(AssetLoader.TextureFromFile(Path.Combine(ModPath, "ChalkFace_1.png")), new Vector2(0.5f, 0.25f), 25f);
+				});
+			// Gotta Sweep Animation Sprites
+			Resources.FindObjectsOfTypeAll<GottaSweep>().Do((x) => {
+				var comp = x.gameObject.AddComponent<GenericAnimationExtraComponent>();
+				comp.sprites = new Sprite[7];
+				comp.sprites[0] = x.spriteRenderer[0].sprite;
+				for (int i = 1; i < comp.sprites.Length; i++)
+					comp.sprites[i] = AssetLoader.SpriteFromTexture2D(AssetLoader.TextureFromFile(Path.Combine(ModPath, $"sweep_{i}.png")), 26f);
+				// JumpRope Quick Fix
+				Resources.FindObjectsOfTypeAll<Jumprope>().Do((x) =>
+				{
+					var comp = x.gameObject.AddComponent<GenericAnimationExtraComponent>();
+					comp.sprites = null; // No reference in this
+				});
+				
+			});
+
+			// Gum overlay animation
+			GumSplash.sprites = new Sprite[6];
+			GumSplash.sprites[5] = man.Get<Canvas>("gumOverlay").GetComponentInChildren<Image>().sprite;  // There must be at least one
+			for (int i = 0; i <  GumSplash.sprites.Length - 1; i++)
+				GumSplash.sprites[i] = AssetLoader.SpriteFromTexture2D(AssetLoader.TextureFromFile(Path.Combine(ModPath, $"gumOverlay_{i + 1}.png")), 1f);
+
+			// Cloudy Copter assets and components
+			Resources.FindObjectsOfTypeAll<Cumulo>().DoIf(x => !x.GetComponent<PropagatedAudioManager>(), x => x.gameObject.CreateAudioManager(45, 75));
+			CumuloPatch.blowBeforeBlowing = ObjectCreators.CreateSoundObject(AssetLoader.AudioClipFromFile(Path.Combine(ModPath, "CC_Blow.wav")), "Vfx_CC_Breath", SoundType.Voice, Color.white);
+			CumuloPatch.pah = ObjectCreators.CreateSoundObject(AssetLoader.AudioClipFromFile(Path.Combine(ModPath, "CC_PAH.wav")), "Vfx_CC_PAH", SoundType.Voice, Color.white);
+
 			
 		}
 

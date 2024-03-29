@@ -1,6 +1,6 @@
 ﻿using HarmonyLib;
 using PixelInternalAPI.Components;
-using PixelInternalAPI.Extensions;
+using PixelInternalAPI.Classes;
 
 namespace BBPlusAnimations.Patches
 {
@@ -8,7 +8,9 @@ namespace BBPlusAnimations.Patches
 	internal class ITMTeleporterPatch
 	{
 		private static void Prefix(PlayerManager ___pm) =>
-			Singleton<CoreGameManager>.Instance.GetCamera(___pm.playerNumber).StartCoroutine(Singleton<CoreGameManager>.Instance.GetCamera(___pm.playerNumber).GetComponent<CustomPlayerCameraComponent>()?.fovModifiers.ReverseSlideFOVAnimation(new(), 65f, 4f));
+			Singleton<CoreGameManager>.Instance.GetCamera(___pm.playerNumber).StartCoroutine(new BaseModifier().ReverseSlideFOVAnimation(
+				Singleton<CoreGameManager>.Instance.GetCamera(___pm.playerNumber).GetComponent<CustomPlayerCameraComponent>().fovModifiers,
+				65f, 4f));
 		
 	}
 }

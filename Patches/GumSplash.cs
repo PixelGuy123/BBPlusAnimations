@@ -3,6 +3,10 @@ using PixelInternalAPI.Components;
 using UnityEngine;
 using static UnityEngine.Object;
 using System.Collections;
+using System.Collections.Generic;
+using System.Reflection.Emit;
+using UnityEngine.UI;
+using PixelInternalAPI.Extensions;
 
 namespace BBPlusAnimations.Patches
 {
@@ -76,5 +80,143 @@ namespace BBPlusAnimations.Patches
 
 		internal static Transform gumSplash;
 		internal static SoundObject splash;
+
+		[HarmonyPatch("EntityTriggerEnter")]
+		[HarmonyTranspiler]
+		private static IEnumerable<CodeInstruction> AnimationUponPlayerHit(IEnumerable<CodeInstruction> i) =>
+			new CodeMatcher(i)
+			.MatchForward(false, 
+				new(OpCodes.Ldarg_0),
+				new(CodeInstruction.LoadField(typeof(Gum), "beans")),
+				new(OpCodes.Callvirt, AccessTools.Method(typeof(Beans), "HitPlayer"))
+				)
+			.InsertAndAdvance(
+				new(OpCodes.Ldarg_0),
+				new(OpCodes.Ldarg_0),
+				CodeInstruction.LoadField(typeof(Gum), "canvas"),
+				Transpilers.EmitDelegate<System.Action<Gum, Canvas>>((x, y) => x.StartCoroutine(OverlayAnimation(y, x.ec)))
+				)
+			.InstructionEnumeration();
+
+		[HarmonyPatch("Timer", MethodType.Enumerator)]
+		[HarmonyTranspiler]
+		private static IEnumerable<CodeInstruction> DeleteThatCutVariable(IEnumerable<CodeInstruction> i) =>
+			new CodeMatcher(i)
+			.MatchForward(false, 
+				new(OpCodes.Ldloc_1),
+				new(OpCodes.Ldc_I4_0), 
+				new(CodeInstruction.StoreField(typeof(Gum), "cut"))
+				)
+			.SetAndAdvance(OpCodes.Nop, null)
+			.SetAndAdvance(OpCodes.Nop, null) // AGAIN THIS NOP, WHY CAN'T I REMOVE INSTRUCTIONS
+			.SetAndAdvance(OpCodes.Nop, null)
+			.InstructionEnumeration();
+
+		[HarmonyPatch("Hide")]
+		[HarmonyTranspiler]
+		private static IEnumerable<CodeInstruction> HideGumCover(IEnumerable<CodeInstruction> i, ILGenerator g) =>
+		
+			new CodeMatcher(i, g)
+			.Start()
+			.InsertAndAdvance()
+
+			.MatchForward(false, 
+				new(OpCodes.Ldarg_0),
+				new(CodeInstruction.LoadField(typeof(Gum), "entity")),
+				new(OpCodes.Ldc_I4_0),
+				new(OpCodes.Callvirt, AccessTools.Method(typeof(Entity), "SetActive", [typeof(bool)]))
+				)
+			.RemoveInstructions(4) // Remove this to not disable the entity before the 
+
+				.MatchForward(false,
+				new(OpCodes.Ldarg_0),
+				new(CodeInstruction.LoadField(typeof(Gum), "canvas")),
+				new(OpCodes.Callvirt, AccessTools.PropertyGetter(typeof(Component), "gameObject")),
+				new(OpCodes.Ldc_I4_0),
+				new(OpCodes.Callvirt, AccessTools.Method(typeof(GameObject), "SetActive", [typeof(bool)]))
+				)
+			.RemoveInstructions(5) // Remove them
+			.InsertAndAdvance( // Animation for canvas
+				new(OpCodes.Ldarg_0),
+				new(OpCodes.Ldarg_0),
+				CodeInstruction.LoadField(typeof(Gum), "canvas"),
+				new(OpCodes.Ldarg_0),
+				CodeInstruction.LoadField(typeof(Gum), "entity"),
+				new(OpCodes.Ldarg_0),
+				new(CodeInstruction.LoadField(typeof(Gum), "cut")),
+				Transpilers.EmitDelegate<System.Action<Gum, Canvas, Entity, bool>>((x, y, z, u) => x.StartCoroutine(OverlayDisappearAnimation(y, x.ec, z, u)))
+				) // Now add new one
+			.InstructionEnumeration();
+		
+
+		[HarmonyPatch("Hide")]
+		[HarmonyPostfix]
+		private static void SetCutFalse(ref bool ___cut) =>
+			___cut = false;
+		
+
+		static IEnumerator OverlayAnimation(Canvas c, EnvironmentController ec)
+		{
+			var img = c.GetComponentInChildren<Image>();
+			img.sprite = sprites[0];
+
+			float cooldown = 2f;
+			while (cooldown > 0f)
+			{
+				cooldown -= ec.EnvironmentTimeScale * Time.deltaTime;
+				yield return null;
+			}
+			
+			float frame = 0f;
+			int idx;
+			while (true)
+			{
+				frame += 9f * ec.EnvironmentTimeScale * Time.deltaTime;
+				idx = Mathf.FloorToInt(frame);
+				if (idx < sprites.Length)
+					img.sprite = sprites[idx];
+				else
+					break;
+
+				yield return null;
+			}
+
+			yield break;
+
+		}
+
+		static IEnumerator OverlayDisappearAnimation(Canvas ca, EnvironmentController ec, Entity e, bool beenCut)
+		{
+			if (beenCut)
+			{
+				ca.gameObject.SetActive(false);
+				e.SetActive(false);
+				yield break;
+			}
+			var c = ca.GetComponentInChildren<Image>().GetComponent<CanvasRenderer>(); // Get the renderer from it
+			while (true)
+			{
+				var co = c.GetColor();
+				co.a -= ec.EnvironmentTimeScale * Time.deltaTime;
+				if (co.a <= 0f)
+					break;
+
+				c.SetColor(co);
+				
+				yield return null;
+			}
+
+			ca.gameObject.SetActive(false);
+
+			var co2 = c.GetColor();
+			co2.a = 1f;
+			c.SetColor(co2);
+
+			e.SetActive(false);
+
+			yield break;
+		}
+
+		internal static Sprite[] sprites;
 	}
 }

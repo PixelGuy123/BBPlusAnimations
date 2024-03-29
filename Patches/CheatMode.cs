@@ -1,7 +1,9 @@
-﻿using HarmonyLib;
+﻿#if DEBUG
+using HarmonyLib;
 using System.Collections.Generic;
 using System.Reflection.Emit;
-
+// ******* NOTE *******
+// NEVER REFERENCE ANY CHEAT HERE FOR OUTSIDE, THIS IS MEANT FOR DEBUGGING
 
 namespace BBPlusAnimations.Patches
 {
@@ -43,3 +45,4 @@ namespace BBPlusAnimations.Patches
 		}
 	}
 }
+#endif
