@@ -24,20 +24,40 @@ namespace BBPlusAnimations
 	{
 		private void Awake()
 		{
-			Harmony h = new(ModInfo.PLUGIN_GUID);
-			h.PatchAll();
+			try
+			{
+				Harmony h = new(ModInfo.PLUGIN_GUID);
+				h.PatchAll();
+			}
+			catch (System.Exception e)
+			{
+				MTM101BaldiDevAPI.CauseCrash(Info, e);
+				return;
+			}
+			
 
 			ModPath = AssetLoader.GetModPath(this);
 
-			LoadingEvents.RegisterOnAssetsLoaded(OnAssetLoad, false);
+			LoadingEvents.RegisterOnAssetsLoaded(() =>
+			{
+				try
+				{
+					OnAssetLoad();
+				}
+				catch (System.Exception e)
+				{
+					MTM101BaldiDevAPI.CauseCrash(Info, e);
+				}
+			}, false);
 
 			
 		}
 
-
-		
 		void OnAssetLoad()
 		{
+
+			// Particle Material
+			man.Add("particleMaterial", Items.ChalkEraser.GetFirstInstance().item.GetComponent<ParticleSystemRenderer>().material);
 
 			// Sprite Billboard object
 			var baseSprite = new GameObject("SpriteBillBoard").AddComponent<SpriteRenderer>();
@@ -88,14 +108,15 @@ namespace BBPlusAnimations
 			gumHolder.AddComponent<EmptyMonoBehaviour>(); // For coroutines
 			GumSplash.gumSplash = gumHolder.transform;
 
-			GumSplash.splash = ObjectCreators.CreateSoundObject(AssetLoader.AudioClipFromFile(Path.Combine(ModPath, "gumSplash.wav")), "Vfx_GumSplash", SoundType.Voice, new(0.99609f, 0, 0.99609f));
+			GumSplash.splash = ObjectCreators.CreateSoundObject(AssetLoader.AudioClipFromFile(Path.Combine(ModPath, "gumSplash.wav")), "Vfx_GumSplash", SoundType.Voice, new(1 ,0.2039f ,0.8863f));
 
 			// Bsoda particles
-			Resources.FindObjectsOfTypeAll<ITM_BSODA>().Do((x) => {
-				var r = x.transform.Find("RendereBase").Find("Particles");
+			Resources.FindObjectsOfTypeAll<ITM_BSODA>().Do((x) =>
+			{
+				var r = x.transform.Find("RendereBase").Find("Particles"); // Yes, Rendere. I didn't mistyped
 				r.gameObject.SetActive(true);
 				r.transform.localPosition = Vector3.zero; // maybe this is the issue?
-				});
+			});
 
 			// Door
 			Resources.FindObjectsOfTypeAll<StandardDoor>().Do(d => d.gameObject.AddComponent<StandardDoorExtraMaterials>().defaultTex = [AssetLoader.TextureFromFile(Path.Combine(ModPath, "doorLock.png")), AssetLoader.TextureFromFile(Path.Combine(ModPath, "doorLock_left.png"))]);// Sets a lock
@@ -143,18 +164,20 @@ namespace BBPlusAnimations
 			HappyBaldiPatch.baldi = baldi;
 
 			// Chalkles component
-			Resources.FindObjectsOfTypeAll<ChalkFace>().Do((x) => {
+			Resources.FindObjectsOfTypeAll<ChalkFace>().Do((x) =>
+			{
 				var comp = x.gameObject.AddComponent<GenericAnimationExtraComponent>();
 				comp.sprites[1] = AssetLoader.SpriteFromTexture2D(AssetLoader.TextureFromFile(Path.Combine(ModPath, "ChalkFace_1.png")), new Vector2(0.5f, 0.25f), 25f);
-				});
+			});
 			// Gotta Sweep Animation Sprites
-			Resources.FindObjectsOfTypeAll<GottaSweep>().Do((x) => {
+			Resources.FindObjectsOfTypeAll<GottaSweep>().Do((x) =>
+			{
 				var comp = x.gameObject.AddComponent<GenericAnimationExtraComponent>();
 				comp.sprites = new Sprite[7];
 				comp.sprites[0] = x.spriteRenderer[0].sprite;
 				for (int i = 1; i < comp.sprites.Length; i++)
 					comp.sprites[i] = AssetLoader.SpriteFromTexture2D(AssetLoader.TextureFromFile(Path.Combine(ModPath, $"sweep_{i}.png")), 26f);
-				
+
 			});
 
 			// JumpRope Quick Fix
@@ -167,7 +190,7 @@ namespace BBPlusAnimations
 			// Gum overlay animation
 			GumSplash.sprites = new Sprite[6];
 			GumSplash.sprites[5] = man.Get<Canvas>("gumOverlay").GetComponentInChildren<Image>().sprite;  // There must be at least one
-			for (int i = 0; i <  GumSplash.sprites.Length - 1; i++)
+			for (int i = 0; i < GumSplash.sprites.Length - 1; i++)
 				GumSplash.sprites[i] = AssetLoader.SpriteFromTexture2D(AssetLoader.TextureFromFile(Path.Combine(ModPath, $"gumOverlay_{i + 1}.png")), 1f);
 
 			// Cloudy Copter assets and components
@@ -175,10 +198,75 @@ namespace BBPlusAnimations
 			CumuloPatch.blowBeforeBlowing = ObjectCreators.CreateSoundObject(AssetLoader.AudioClipFromFile(Path.Combine(ModPath, "CC_Blow.wav")), "Vfx_CC_Breath", SoundType.Voice, Color.white);
 			CumuloPatch.pah = ObjectCreators.CreateSoundObject(AssetLoader.AudioClipFromFile(Path.Combine(ModPath, "CC_PAH.wav")), "Vfx_CC_PAH", SoundType.Voice, Color.white);
 
+			// Portal Posters
+			var portalPoster = Resources.FindObjectsOfTypeAll<WindowObject>().First(x => x.name == "PortalPosterWindow");
+			var portal = portalPoster.windowPre.gameObject.AddComponent<TextureAnimator>(); // Texture animator setup
+			portal.texs = new Texture[10];
+			portal.texs[0] = portalPoster.windowPre.windows[0].materials[1].mainTexture;
+			portal.renderers = portalPoster.windowPre.windows;
+			portal.defaultIndex = 1;
+			portal.speed = 20f;
+			for (int i = 1; i < portal.texs.Length; i++)
+				portal.texs[i] = AssetLoader.TextureFromFile(Path.Combine(ModPath, $"portal_{i}.png"));
+
+			// Plant Particles
+			var tex = AssetLoader.TextureFromFile(Path.Combine(ModPath, "leaves.png"));
+
+			Resources.FindObjectsOfTypeAll<RendererContainer>().DoIf(x => x.name.StartsWith("Plant"), (x) =>
+			{
+				ParticleSystem[] pars = new ParticleSystem[3];
+
+				for (int i = 0; i < pars.Length; i++)
+				{
+					var particle = new GameObject("leaves").AddComponent<ParticleSystem>();
+					particle.transform.SetParent(x.renderers[0].transform);
+					particle.transform.localPosition = Vector3.up * (i + 2);
+					particle.transform.rotation = Quaternion.Euler(90f, 0f, 0f);
+
+					var vel = particle.velocityOverLifetime;
+					vel.enabled = true;
+					vel.zMultiplier = -3.5f;
+
+					var renderer = particle.GetComponent<ParticleSystemRenderer>();
+
+					renderer.material = new(man.Get<Material>("particleMaterial"))
+					{
+						mainTexture = tex
+					};
+
+					var anim = particle.textureSheetAnimation;
+					anim.enabled = true;
+					anim.frameOverTimeMultiplier = 0.0001f;
+					anim.numTilesX = 4;
+					anim.numTilesY = 1;
+					anim.animation = ParticleSystemAnimationType.SingleRow;
+					anim.mode = ParticleSystemAnimationMode.Grid;
+					anim.cycleCount = int.MaxValue; // Bruh
+
+					var co = particle.collision;
+					co.enabled = true;
+					co.type = ParticleSystemCollisionType.World;
+					co.collidesWith = LayerStorage.windowLayer | 1;
+					co.bounceMultiplier = 0f;
+
+					pars[i] = particle;
+				}
+
+				var col = new GameObject("PlantCollider").AddComponent<CapsuleCollider>(); // I hate the plant having 2 prefabs >:(
+				col.transform.SetParent(x.renderers[0].transform);
+				col.transform.localPosition = Vector3.zero;
+				col.isTrigger = true;
+				col.radius = 2f;
+
+				var animator = col.gameObject.AddComponent<PlantAnimator>();
+				animator.particles = pars;
+				animator.audMan = animator.gameObject.CreateAudioManager(30f, 45f);
+				animator.aud_bushes = ObjectCreators.CreateSoundObject(AssetLoader.AudioClipFromFile(Path.Combine(ModPath, "bushes.wav")), "Vfx_plantNoise", SoundType.Voice, Color.white);
+
+			});
+
 			
 		}
-
-		// ******* Events for other mods (compat ones especifically) to override if needed ********
 
 
 		readonly AssetManager man = new();
@@ -193,6 +281,6 @@ namespace BBPlusAnimations
 
 		public const string PLUGIN_NAME = "BB+ New Animations";
 
-		public const string PLUGIN_VERSION = "1.0.0.1";
+		public const string PLUGIN_VERSION = "1.0.1";
 	}
 }
