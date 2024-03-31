@@ -13,9 +13,12 @@ namespace BBPlusAnimations.Patches
 		[HarmonyPostfix]
 		private static void SpawnAnimation(Transform ___sprite, AudioManager ___audMan)
 		{
-			___audMan.FlushQueue(true);
-			___audMan.PlaySingle(sound);
-			___sprite.localScale = Vector3.zero;
+			if (!PropagatedAudioManager.paused)
+			{
+				___audMan.FlushQueue(true);
+				___audMan.PlaySingle(sound);
+				___sprite.localScale = Vector3.zero;
+			}
 		}
 
 		[HarmonyPatch("Pop")]
