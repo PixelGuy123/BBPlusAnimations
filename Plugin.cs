@@ -13,6 +13,7 @@ using BBPlusAnimations.Components;
 using PixelInternalAPI.Extensions;
 using UnityEngine.UI;
 using MTM101BaldAPI.Reflection;
+using UnityEngine.Animations;
 
 namespace BBPlusAnimations
 {
@@ -31,6 +32,7 @@ namespace BBPlusAnimations
 			}
 			catch (System.Exception e)
 			{
+				Debug.LogException(e);
 				MTM101BaldiDevAPI.CauseCrash(Info, e);
 				return;
 			}
@@ -46,6 +48,7 @@ namespace BBPlusAnimations
 				}
 				catch (System.Exception e)
 				{
+					Debug.LogException(e);
 					MTM101BaldiDevAPI.CauseCrash(Info, e);
 				}
 			}, false);
@@ -210,6 +213,9 @@ namespace BBPlusAnimations
 				portal.texs[i] = AssetLoader.TextureFromFile(Path.Combine(ModPath, $"portal_{i}.png"));
 
 			// Plant Particles
+			Sprite[] plantSprites = new Sprite[6];
+			for (int i = 1; i < plantSprites.Length; i++)
+				plantSprites[i] = AssetLoader.SpriteFromTexture2D(AssetLoader.TextureFromFile(Path.Combine(ModPath, $"plant{i}.png")), new Vector2(0.5f, 0f),15f);
 			var tex = AssetLoader.TextureFromFile(Path.Combine(ModPath, "leaves.png"));
 
 			Resources.FindObjectsOfTypeAll<RendererContainer>().DoIf(x => x.name.StartsWith("Plant"), (x) =>
@@ -222,10 +228,14 @@ namespace BBPlusAnimations
 					particle.transform.SetParent(x.renderers[0].transform);
 					particle.transform.localPosition = Vector3.up * (i + 2);
 					particle.transform.rotation = Quaternion.Euler(90f, 0f, 0f);
+					var main = particle.main;
+					main.gravityModifierMultiplier = 0.03f;
+					main.startLifetimeMultiplier = 10f;
 
 					var vel = particle.velocityOverLifetime;
 					vel.enabled = true;
-					vel.zMultiplier = -3.5f;
+					vel.zMultiplier = -4f;
+
 
 					var renderer = particle.GetComponent<ParticleSystemRenderer>();
 
@@ -248,13 +258,16 @@ namespace BBPlusAnimations
 					co.type = ParticleSystemCollisionType.World;
 					co.collidesWith = LayerStorage.windowLayer | 1;
 					co.bounceMultiplier = 0f;
+					co.lifetimeLossMultiplier = 0f;
+					co.colliderForce = 0f;
+					co.maxCollisionShapes = 5;
 
 					pars[i] = particle;
 				}
 
 				var col = new GameObject("PlantCollider").AddComponent<CapsuleCollider>(); // I hate the plant having 2 prefabs >:(
 				col.transform.SetParent(x.renderers[0].transform);
-				col.transform.localPosition = Vector3.zero;
+				col.transform.localPosition = Vector3.up * 5f;
 				col.isTrigger = true;
 				col.radius = 2f;
 
@@ -262,6 +275,9 @@ namespace BBPlusAnimations
 				animator.particles = pars;
 				animator.audMan = animator.gameObject.CreateAudioManager(30f, 45f);
 				animator.aud_bushes = ObjectCreators.CreateSoundObject(AssetLoader.AudioClipFromFile(Path.Combine(ModPath, "bushes.wav")), "Vfx_plantNoise", SoundType.Voice, Color.white);
+				animator.renderer = (SpriteRenderer)x.renderers[0];
+				animator.sprites = plantSprites;
+				animator.sprites[0] = animator.renderer.sprite;
 
 			});
 
@@ -281,6 +297,6 @@ namespace BBPlusAnimations
 
 		public const string PLUGIN_NAME = "BB+ New Animations";
 
-		public const string PLUGIN_VERSION = "1.0.1.1";
+		public const string PLUGIN_VERSION = "1.0.2";
 	}
 }
