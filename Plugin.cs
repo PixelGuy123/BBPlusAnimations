@@ -259,8 +259,6 @@ namespace BBPlusAnimations
 					co.collidesWith = LayerStorage.windowLayer | 1;
 					co.bounceMultiplier = 0f;
 					co.lifetimeLossMultiplier = 0f;
-					co.colliderForce = 0f;
-					co.maxCollisionShapes = 5;
 
 					pars[i] = particle;
 				}
@@ -297,6 +295,6 @@ namespace BBPlusAnimations
 
 		public const string PLUGIN_NAME = "BB+ New Animations";
 
-		public const string PLUGIN_VERSION = "1.0.2";
+		public const string PLUGIN_VERSION = "1.0.2.1";
 	}
 }

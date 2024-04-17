@@ -14,7 +14,7 @@ namespace BBPlusAnimations.Patches
 		private static void Setup(ITM_GrapplingHook __instance, PlayerManager pm)
 		{
 			var h = __instance.gameObject.AddComponent<GrapplingHookFOVHolder>();
-			Singleton<CoreGameManager>.Instance.GetCamera(pm.playerNumber).GetComponent<CustomPlayerCameraComponent>()?.fovModifiers.Add(h.fovModifier);
+			Singleton<CoreGameManager>.Instance.GetCamera(pm.playerNumber).GetComponent<CustomPlayerCameraComponent>().AddModifier(h.fovModifier);
 		}
 
 		[HarmonyPatch("Update")]
@@ -39,7 +39,7 @@ namespace BBPlusAnimations.Patches
 		{
 			var cam = Singleton<CoreGameManager>.Instance.GetCamera(___pm.playerNumber);
 			var comp = __instance.GetComponent<GrapplingHookFOVHolder>();
-			cam.StartCoroutine(comp.fovModifier.ResetSlideFOVAnimation(cam.GetComponent<CustomPlayerCameraComponent>().fovModifiers, 3f));
+			cam.StartCoroutine(cam.GetComponent<CustomPlayerCameraComponent>().ResetSlideFOVAnimation(comp.fovModifier, 3f));
 			comp.deadLocked = true; // to not be active in Update()
 
 			___lineRenderer.enabled = false;

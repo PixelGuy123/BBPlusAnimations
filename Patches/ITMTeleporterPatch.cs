@@ -8,8 +8,7 @@ namespace BBPlusAnimations.Patches
 	internal class ITMTeleporterPatch
 	{
 		private static void Prefix(PlayerManager ___pm) =>
-			Singleton<CoreGameManager>.Instance.GetCamera(___pm.playerNumber).StartCoroutine(new BaseModifier().ReverseSlideFOVAnimation(
-				Singleton<CoreGameManager>.Instance.GetCamera(___pm.playerNumber).GetComponent<CustomPlayerCameraComponent>().fovModifiers,
+			Singleton<CoreGameManager>.Instance.GetCamera(___pm.playerNumber).StartCoroutine(Singleton<CoreGameManager>.Instance.GetCamera(___pm.playerNumber).GetComponent<CustomPlayerCameraComponent>().ReverseSlideFOVAnimation(new BaseModifier(),
 				65f, 4f));
 		
 	}

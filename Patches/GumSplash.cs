@@ -6,7 +6,6 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Reflection.Emit;
 using UnityEngine.UI;
-using PixelInternalAPI.Extensions;
 
 namespace BBPlusAnimations.Patches
 {
