@@ -27,7 +27,7 @@ namespace BBPlusAnimations.Patches
 		{
 			var comp = __instance.GetComponent<GenericAnimationExtraComponent>();
 			if (comp.isActive)
-				__instance.spriteRenderer[0].sprite = comp.sprites[1 + (Mathf.FloorToInt(Time.fixedTime * __instance.TimeScale * 15f) % comp.sprites.Length - 1)];
+				__instance.spriteRenderer[0].sprite = comp.sprites[1 + (Mathf.FloorToInt(Time.fixedTime * __instance.TimeScale * 15f) % (comp.sprites.Length - 1))]; // minor () mistake for math
 			
 		}
 	}

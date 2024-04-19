@@ -19,14 +19,23 @@ namespace BBPlusAnimations.Patches
 
 		[HarmonyPatch(typeof(WaterFountain), "Clicked")]
 		private static void Postfix(WaterFountain __instance, int playerNumber) =>
-			__instance.StartCoroutine(Animation(__instance.transform.Find("FountainSpout"), Singleton<CoreGameManager>.Instance.GetPlayer(playerNumber), 1.05f, 1.3f, 1f, 2f));
+			__instance.StartCoroutine(Animation(__instance.transform.Find("FountainSpout"), Singleton<CoreGameManager>.Instance.GetPlayer(playerNumber), 1.05f, 1.3f, 1f, 2f, spoutWater, normalSpout));
+
+		internal static Sprite spoutWater, normalSpout;
 		
 
 
 
 
-		static IEnumerator Animation(Transform m, PlayerManager pm, float offsetx, float offsety, float speedx, float speedy)
+		static IEnumerator Animation(Transform m, PlayerManager pm, float offsetx, float offsety, float speedx, float speedy, Sprite replacement = null, Sprite ogSprite = null)
 		{
+			SpriteRenderer spriter = null;
+			if (replacement)
+			{
+				spriter = m.GetComponent<SpriteRenderer>();
+				spriter.sprite = replacement;
+			}
+
 			float scalex = 1f;
 			float scaley = 1f;
 			while (true)
@@ -64,6 +73,10 @@ namespace BBPlusAnimations.Patches
 			}
 
 			m.localScale = Vector3.one;
+			if (replacement)
+				spriter.sprite = ogSprite;
+			
+
 			yield break;
 		}
 	}

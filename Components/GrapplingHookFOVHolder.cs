@@ -1,15 +1,12 @@
 ﻿using BBPlusAnimations.Patches;
 using HarmonyLib;
-using PixelInternalAPI.Classes;
 using System.Collections;
 using UnityEngine;
 
 namespace BBPlusAnimations.Components
 {
-	internal class GrapplingHookFOVHolder : MonoBehaviour
+	internal class GrapplingHookFOVHolder : GenericFOVHolder
 	{
-		internal BaseModifier fovModifier = new();
-
 		internal bool deadLocked = false;
 
 		internal IEnumerator FadeAnimation(ITM_GrapplingHook g, EnvironmentController ec)

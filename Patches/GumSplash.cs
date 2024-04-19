@@ -10,7 +10,7 @@ using UnityEngine.UI;
 namespace BBPlusAnimations.Patches
 {
 	[HarmonyPatch(typeof(Gum))]
-	internal class GumSplash
+	public class GumSplash
 	{
 		[HarmonyPatch("OnEntityMoveCollision")]
 		[HarmonyPrefix]
@@ -77,8 +77,8 @@ namespace BBPlusAnimations.Patches
 		}
 
 
-		internal static Transform gumSplash;
-		internal static SoundObject splash;
+		public static Transform gumSplash;
+		public static SoundObject splash;
 
 		[HarmonyPatch("EntityTriggerEnter")]
 		[HarmonyTranspiler]

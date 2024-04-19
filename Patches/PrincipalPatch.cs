@@ -31,7 +31,7 @@ namespace BBPlusAnimations.Patches
 		{
 			bool turn = false;
 			float scale = 1f;
-			var target = p.spriteBase.transform.GetChild(0);
+			var target = p.spriteRenderer[0].transform;
 			yield return null; // Wait for audio to play
 
 			while (man.QueuedAudioIsPlaying)
