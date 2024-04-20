@@ -120,9 +120,9 @@ namespace BBPlusAnimations
 				r.gameObject.SetActive(true);
 				r.transform.localPosition = Vector3.zero; // maybe this is the issue?
 			});
-
+			Texture2D[] texs = [AssetLoader.TextureFromFile(Path.Combine(ModPath, "doorLock.png")), AssetLoader.TextureFromFile(Path.Combine(ModPath, "doorLock_left.png"))];
 			// Door
-			GenericExtensions.FindResourceObjects<StandardDoor>().Do(d => d.gameObject.AddComponent<StandardDoorExtraMaterials>().defaultTex = [AssetLoader.TextureFromFile(Path.Combine(ModPath, "doorLock.png")), AssetLoader.TextureFromFile(Path.Combine(ModPath, "doorLock_left.png"))]);// Sets a lock
+			GenericExtensions.FindResourceObjects<StandardDoor>().Do(d => d.gameObject.AddComponent<StandardDoorExtraMaterials>().defaultTex = texs);// Sets a lock
 
 			// Balloon Pop Animation
 			NumberBalloonPatch.explodeVisuals = new Sprite[6];

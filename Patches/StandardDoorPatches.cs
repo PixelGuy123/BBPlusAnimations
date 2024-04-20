@@ -37,7 +37,13 @@ namespace BBPlusAnimations.Patches
 					storedTextures.Add(tex.name, readable);
 					mat.mainTexture = readable;
 				}
-				else storedTextures.Add(tex.name, tex);
+				else
+				{
+					var newTex = Object.Instantiate(tex);
+					newTex.OverlayTexture(comp.defaultTex[idx]);
+					storedTextures.Add(tex.name, newTex);
+					mat.mainTexture = newTex;
+				}
 			}
 
 			Material mat2 = new(__instance.overlayShut[1]);
@@ -59,7 +65,13 @@ namespace BBPlusAnimations.Patches
 					storedTextures.Add(tex.name, readable);
 					mat2.mainTexture = readable;
 				}
-				else storedTextures.Add(tex.name, tex);
+				else
+				{
+					var newTex = Object.Instantiate(tex);
+					newTex.OverlayTexture(comp.defaultTex[idx]);
+					storedTextures.Add(tex.name, newTex);
+					mat2.mainTexture = newTex;
+				}
 			}
 
 			comp.doorLockedMat = [mat, mat2];
