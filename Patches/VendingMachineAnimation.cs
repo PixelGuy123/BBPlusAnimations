@@ -5,7 +5,7 @@ using UnityEngine;
 namespace BBPlusAnimations.Patches
 {
 	[HarmonyPatch]
-	internal class GenericAnimation
+	public class GenericAnimation
 	{
 		[HarmonyPatch(typeof(SodaMachine), "InsertItem")]
 		private static void Postfix(SodaMachine __instance, PlayerManager pm) =>
@@ -15,15 +15,16 @@ namespace BBPlusAnimations.Patches
 		[HarmonyPatch(typeof(TapePlayer), "InsertItem")]
 		private static void Postfix(TapePlayer __instance, PlayerManager player) =>
 			__instance.StartCoroutine(Animation(__instance.transform.Find("Sprite"), player, 1.2f, 1.2f, 3.5f, 3.5f));
-		
+
 
 		[HarmonyPatch(typeof(WaterFountain), "Clicked")]
 		private static void Postfix(WaterFountain __instance, int playerNumber) =>
-			__instance.StartCoroutine(Animation(__instance.transform.Find("FountainSpout"), Singleton<CoreGameManager>.Instance.GetPlayer(playerNumber), 1.05f, 1.3f, 1f, 2f, spoutWater, normalSpout));
+			AnimateWaterFountain(__instance, Singleton<CoreGameManager>.Instance.GetPlayer(playerNumber));
 
 		internal static Sprite spoutWater, normalSpout;
 		
-
+		public static void AnimateWaterFountain(WaterFountain instance, PlayerManager pm) =>
+			instance.StartCoroutine(Animation(instance.transform.Find("FountainSpout"), pm, 1.05f, 1.3f, 1f, 2f, spoutWater, normalSpout));
 
 
 

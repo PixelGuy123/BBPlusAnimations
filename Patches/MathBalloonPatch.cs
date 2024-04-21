@@ -38,13 +38,15 @@ namespace BBPlusAnimations.Patches
 		[HarmonyPatch("Pop")]
 		private static void Prefix(MathMachineNumber __instance, ref Transform ___sprite, bool ___popping)
 		{
-			if (!__instance.gameObject.activeSelf)
+
+			if (!___popping && __instance.gameObject.activeInHierarchy)
 			{
-				Object.Destroy(__instance.gameObject); // Has been culled, so disable it
+				__instance.StartCoroutine(Animation(__instance, ___sprite.GetComponent<SpriteRenderer>()));
 				return;
 			}
-			if (!___popping)
-				__instance.StartCoroutine(Animation(__instance, ___sprite.GetComponent<SpriteRenderer>()));
+
+			Object.Destroy(__instance.gameObject);
+
 		}
 
 		static IEnumerator Animation(MathMachineNumber i, SpriteRenderer renderer)
