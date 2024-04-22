@@ -19,13 +19,15 @@ namespace BBPlusAnimations.Patches
 				new(OpCodes.Callvirt, AccessTools.Method(typeof(LookAtGuy), "Blind", []))
 			)
 			.InsertAndAdvance(
+				new(OpCodes.Ldarg_0),
+				CodeInstruction.LoadField(typeof(LookAtGuy_BaseState), "theTest"),
 				new(OpCodes.Ldarg_1),
 				new(OpCodes.Callvirt, AccessTools.Method(typeof(Component), "GetComponent", [], [typeof(PlayerManager)])),
-				Transpilers.EmitDelegate<System.Action<PlayerManager>>((x) => x.StartCoroutine(AnimatePlayerHud(x)))
+				Transpilers.EmitDelegate<System.Action<LookAtGuy, PlayerManager>>((x, y) => y.StartCoroutine(AnimatePlayerHud(y, x)))
 			)
 			.InstructionEnumeration();
 
-		static IEnumerator AnimatePlayerHud(PlayerManager man)
+		static IEnumerator AnimatePlayerHud(PlayerManager man, LookAtGuy g)
 		{
 
 			canvas.worldCamera = Singleton<CoreGameManager>.Instance.GetCamera(man.playerNumber).canvasCam;
@@ -35,7 +37,7 @@ namespace BBPlusAnimations.Patches
 			float cooldown = 1f;
 			while (cooldown > 0f)
 			{
-				cooldown -= man.ec.NpcTimeScale * Time.deltaTime;
+				cooldown -= g.TimeScale * Time.deltaTime;
 				yield return null;
 			}
 			
@@ -44,7 +46,7 @@ namespace BBPlusAnimations.Patches
 
 			while (true)
 			{
-				frame += 20f * man.ec.NpcTimeScale * Time.deltaTime;
+				frame += 20f * g.TimeScale * Time.deltaTime;
 				idx = Mathf.FloorToInt(frame);
 				if (idx < sprites.Length) img.sprite = sprites[idx];
 				else break;

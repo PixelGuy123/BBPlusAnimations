@@ -32,7 +32,7 @@ namespace BBPlusAnimations.Patches
 			float frames = 0f;
 			while (true)
 			{
-				frames += 31f * j.player.ec.NpcTimeScale * Time.deltaTime;
+				frames += 31f * Time.deltaTime;
 				idx = Mathf.FloorToInt(frames);
 				if (idx < sprites.Length)
 					sprite.sprite = sprites[idx];
