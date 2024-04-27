@@ -271,7 +271,7 @@ namespace BBPlusAnimations
 
 				var animator = col.gameObject.AddComponent<PlantAnimator>();
 				animator.particles = pars;
-				animator.audMan = animator.gameObject.CreateAudioManager(30f, 45f);
+				animator.audMan = animator.gameObject.CreatePropagatedAudioManager(30f, 45f);
 				animator.aud_bushes = ObjectCreators.CreateSoundObject(AssetLoader.AudioClipFromFile(Path.Combine(ModPath, "bushes.wav")), "Vfx_plantNoise", SoundType.Voice, Color.white);
 				animator.renderer = (SpriteRenderer)x.renderers[0];
 				animator.sprites = plantSprites;
@@ -315,7 +315,7 @@ namespace BBPlusAnimations
 
 			var emitter = flipperParticle.AddComponent<TemporaryParticles>();
 			emitter.particles = particleSystem;
-			emitter.audMan = flipperParticle.CreateAudioManager(85, 105, true);
+			emitter.audMan = flipperParticle.CreateAudioManager(85, 105).SetAudioManagerAsPrefab();
 			emitter.audExplode = ObjectCreators.CreateSoundObject(AssetLoader.AudioClipFromFile(Path.Combine(ModPath, "flipperExplode.wav")), "Vfx_flipperExplode", SoundType.Voice, Color.white);
 			emitter.minParticles = 75;
 			emitter.maxParticles = 105;
@@ -446,6 +446,6 @@ namespace BBPlusAnimations
 
 		public const string PLUGIN_NAME = "BB+ New Animations";
 
-		public const string PLUGIN_VERSION = "1.1.2";
+		public const string PLUGIN_VERSION = "1.1.3";
 	}
 }
