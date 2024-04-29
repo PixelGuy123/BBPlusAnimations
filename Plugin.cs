@@ -431,6 +431,14 @@ namespace BBPlusAnimations
 			BullyBlinkComponent.bullyBlink = AssetLoader.SpriteFromTexture2D(AssetLoader.TextureFromFile(Path.Combine(ModPath, "bully_blink.png")), 26f);
 			GenericExtensions.FindResourceObjects<Bully>().Do(x => x.gameObject.AddComponent<BullyBlinkComponent>());
 
+			// Gotta sweep audio
+			var aud = ObjectCreators.CreateSoundObject(AssetLoader.AudioClipFromFile(Path.Combine(ModPath, "GS_Sweeping.wav")), "Vfx_GottaSweep", SoundType.Voice, new(0, 0.6226f, 0.0614f));
+			GenericExtensions.FindResourceObjects<GottaSweep>().Do((x) =>
+			{
+				var c = x.gameObject.AddComponent<GottaSweepComponent>();
+				c.aud_sweep = aud;
+			});
+
 		}
 
 
