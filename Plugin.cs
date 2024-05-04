@@ -3,7 +3,6 @@ using HarmonyLib;
 using MTM101BaldAPI.Registers;
 using UnityEngine;
 using PixelInternalAPI.Classes;
-using System.Linq;
 using MTM101BaldAPI.AssetTools;
 using MTM101BaldAPI;
 using PixelInternalAPI.Components;
@@ -12,8 +11,8 @@ using BBPlusAnimations.Patches;
 using BBPlusAnimations.Components;
 using PixelInternalAPI.Extensions;
 using UnityEngine.UI;
-using MTM101BaldAPI.Reflection;
-using System.Reflection;
+//using MTM101BaldAPI.Reflection;
+//using System.Reflection;
 
 namespace BBPlusAnimations
 {
@@ -62,51 +61,20 @@ namespace BBPlusAnimations
 			// Particle Material
 			man.Add("particleMaterial", Items.ChalkEraser.GetFirstInstance().item.GetComponent<ParticleSystemRenderer>().material);
 
-			// Sprite Billboard object
-			var baseSprite = new GameObject("SpriteBillBoard").AddComponent<SpriteRenderer>();
-			baseSprite.material = GenericExtensions.FindResourceObjectByName<Material>("SpriteStandard_Billboard");
-			baseSprite.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
-			baseSprite.receiveShadows = false;
-
-			baseSprite.gameObject.layer = LayerStorage.billboardLayer;
-			DontDestroyOnLoad(baseSprite.gameObject);
-			man.Add("SpriteBillboardTemplate", baseSprite.gameObject);
-
-			// Sprite NO Billboard object
-			baseSprite = new GameObject("SpriteNoBillBoard").AddComponent<SpriteRenderer>();
-			baseSprite.material = GenericExtensions.FindResourceObjectByName<Material>("SpriteStandard_NoBillboard");
-			baseSprite.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
-			baseSprite.receiveShadows = false;
-
-			baseSprite.gameObject.layer = LayerStorage.billboardLayer;
-			DontDestroyOnLoad(baseSprite.gameObject);
-			baseSprite.gameObject.SetActive(false);
-			man.Add("SpriteNoBillboardTemplate", baseSprite.gameObject);
-
 			// Overlay
 			man.Add("gumOverlay", GenericExtensions.FindResourceObjectByName<Canvas>("GumOverlay"));
 
 			// Gum
 			var gumHolder = new GameObject("gumSplash");
-			var gum = Instantiate(man.Get<GameObject>("SpriteNoBillboardTemplate")); // front of the gum
-			gum.GetComponent<SpriteRenderer>().sprite = AssetLoader.SpriteFromTexture2D(
-				AssetLoader.TextureFromFile(Path.Combine(ModPath, "gumSplash.png"))
-				, 25f);
-			gum.layer = LayerStorage.billboardLayer;
+			var gum = ObjectCreationExtensions.CreateSpriteBillboard(AssetLoader.SpriteFromTexture2D(AssetLoader.TextureFromFile(Path.Combine(ModPath, "gumSplash.png")), 25f), false).gameObject;
 			gum.transform.SetParent(gumHolder.transform);
 			gum.transform.localPosition = Vector3.zero;
-			gum.SetActive(true);
 
-			gum = Instantiate(man.Get<GameObject>("SpriteNoBillboardTemplate")); // Back of the gum
-			gum.GetComponent<SpriteRenderer>().sprite = AssetLoader.SpriteFromTexture2D(
-				AssetLoader.TextureFromFile(Path.Combine(ModPath, "gumSplash_back.png"))
-				, 25f);
+			gum = ObjectCreationExtensions.CreateSpriteBillboard(AssetLoader.SpriteFromTexture2D(AssetLoader.TextureFromFile(Path.Combine(ModPath, "gumSplash_back.png")), 25f), false).gameObject;
 			gum.transform.SetParent(gumHolder.transform);
 			gum.transform.localPosition = Vector3.zero + gum.transform.forward * -0.01f;
-			gum.SetActive(true);
 
-			gumHolder.SetActive(false);
-			DontDestroyOnLoad(gumHolder);
+			gumHolder.SetAsPrefab();
 
 			gumHolder.AddComponent<EmptyMonoBehaviour>(); // For coroutines
 			GumSplash.gumSplash = gumHolder.transform;
@@ -158,12 +126,12 @@ namespace BBPlusAnimations
 				PlaytimeJumpropePatch.sprites[i] = AssetLoader.SpriteFromTexture2D(AssetLoader.TextureFromFile(Path.Combine(ModPath, $"jmpropecut_{i}.png")), 1f);
 
 			// Baldi Haha
-			var baldi = Instantiate(man.Get<GameObject>("SpriteBillboardTemplate")).AddComponent<BaldiFloatsAway>();
+			var baldiRender = ObjectCreationExtensions.CreateSpriteBillboard(null);
+			var baldi = baldiRender.gameObject.AddComponent<BaldiFloatsAway>();
 			baldi.name = "BaldiTheFloater";
-			baldi.renderer = baldi.GetComponent<SpriteRenderer>();
-			baldi.sprites = (Sprite[])GenericExtensions.FindResourceObject<BaldiDance>().ReflectionGetVariable("danceSprites"); // First time I'm using the api reflection lol
-			DontDestroyOnLoad(baldi.gameObject);
-			baldi.gameObject.SetActive(false);
+			baldi.renderer = baldiRender;
+			baldi.sprites = GenericExtensions.FindResourceObject<BaldiDance>().danceSprites; //(Sprite[])GenericExtensions.FindResourceObject<BaldiDance>().ReflectionGetVariable("danceSprites"); // First time I'm using the api reflection lol
+			baldi.gameObject.SetAsPrefab();
 			HappyBaldiPatch.baldi = baldi;
 
 			// Chalkles component
@@ -171,16 +139,6 @@ namespace BBPlusAnimations
 			{
 				var comp = x.gameObject.AddComponent<GenericAnimationExtraComponent>();
 				comp.sprites[1] = AssetLoader.SpriteFromTexture2D(AssetLoader.TextureFromFile(Path.Combine(ModPath, "ChalkFace_1.png")), new Vector2(0.5f, 0.25f), 25f);
-			});
-			// Gotta Sweep Animation Sprites
-			GenericExtensions.FindResourceObjects<GottaSweep>().Do((x) =>
-			{
-				var comp = x.gameObject.AddComponent<GenericAnimationExtraComponent>();
-				comp.sprites = new Sprite[7];
-				comp.sprites[0] = x.spriteRenderer[0].sprite;
-				for (int i = 1; i < comp.sprites.Length; i++)
-					comp.sprites[i] = AssetLoader.SpriteFromTexture2D(AssetLoader.TextureFromFile(Path.Combine(ModPath, $"sweep_{i}.png")), 26f);
-
 			});
 
 			// JumpRope Quick Fix
@@ -326,19 +284,19 @@ namespace BBPlusAnimations
 
 			// Tape Player revert state
 
-			FieldInfo tapePlayer_spriteToChange = AccessTools.Field(typeof(TapePlayer), "spriteToChange");
-			FieldInfo tapePlayer_changeOnUse = AccessTools.Field(typeof(TapePlayer), "changeOnUse");
-			FieldInfo tapePlayer_usedSprite = AccessTools.Field(typeof(TapePlayer), "usedSprite");
+			//FieldInfo tapePlayer_spriteToChange = AccessTools.Field(typeof(TapePlayer), "spriteToChange");
+			//FieldInfo tapePlayer_changeOnUse = AccessTools.Field(typeof(TapePlayer), "changeOnUse");
+			//FieldInfo tapePlayer_usedSprite = AccessTools.Field(typeof(TapePlayer), "usedSprite");
 
 			// The editor somehow breaks Resources
 			GenericExtensions.FindResourceObjects<TapePlayer>().Do(x => {
 				if (x.name == "PayPhone") // everything was null, wow
 				{
-					tapePlayer_spriteToChange.SetValue(x, x.GetComponentInChildren<SpriteRenderer>());
-					tapePlayer_changeOnUse.SetValue(x, true);
-					tapePlayer_usedSprite.SetValue(x, AssetLoader.SpriteFromTexture2D(AssetLoader.TextureFromFile(Path.Combine(ModPath, "phoneActive.png")), 25f)); // No need to store in a variable, there's just one payphone
+					x.spriteToChange = x.GetComponentInChildren<SpriteRenderer>(); //tapePlayer_spriteToChange.SetValue(x, x.GetComponentInChildren<SpriteRenderer>());
+					x.changeOnUse = true; //tapePlayer_changeOnUse.SetValue(x, true);
+					x.usedSprite = AssetLoader.SpriteFromTexture2D(AssetLoader.TextureFromFile(Path.Combine(ModPath, "phoneActive.png")), 25f); //tapePlayer_usedSprite.SetValue(x, AssetLoader.SpriteFromTexture2D(AssetLoader.TextureFromFile(Path.Combine(ModPath, "phoneActive.png")), 25f)); // No need to store in a variable, there's just one payphone
 				}
-				x.gameObject.AddComponent<TapePlayerReverser>().spriteToReverse = ((SpriteRenderer)tapePlayer_spriteToChange.GetValue(x)).sprite;
+				x.gameObject.AddComponent<TapePlayerReverser>().spriteToReverse = x.spriteToChange.sprite; //((SpriteRenderer)tapePlayer_spriteToChange.GetValue(x)).sprite;
 			});
 
 			// Baldi Ruler Break Particles
@@ -379,8 +337,8 @@ namespace BBPlusAnimations
 			BaldiPatch.particle = emitter;
 
 			// Arts and Crafters speed increase
-			FieldInfo attackSpeed = AccessTools.Field(typeof(ArtsAndCrafters), "attackSpinAccel");
-			GenericExtensions.FindResourceObjects<ArtsAndCrafters>().Do(x => attackSpeed.SetValue(x, 80f));
+			//FieldInfo attackSpeed = AccessTools.Field(typeof(ArtsAndCrafters), "attackSpinAccel");
+			GenericExtensions.FindResourceObjects<ArtsAndCrafters>().Do(x => x.attackSpinAccel = 80f); //attackSpeed.SetValue(x, 80f));
 
 			// Water fountain water
 			GenericAnimation.spoutWater = AssetLoader.SpriteFromTexture2D(AssetLoader.TextureFromFile(Path.Combine(ModPath, "spoutSpit.png")), new Vector2(0.75f, 0.5f), 75f);
@@ -431,12 +389,18 @@ namespace BBPlusAnimations
 			BullyBlinkComponent.bullyBlink = AssetLoader.SpriteFromTexture2D(AssetLoader.TextureFromFile(Path.Combine(ModPath, "bully_blink.png")), 26f);
 			GenericExtensions.FindResourceObjects<Bully>().Do(x => x.gameObject.AddComponent<BullyBlinkComponent>());
 
-			// Gotta sweep audio
+			// Gotta sweep audio and tex
 			var aud = ObjectCreators.CreateSoundObject(AssetLoader.AudioClipFromFile(Path.Combine(ModPath, "GS_Sweeping.wav")), "Vfx_GottaSweep", SoundType.Voice, new(0, 0.6226f, 0.0614f));
 			GenericExtensions.FindResourceObjects<GottaSweep>().Do((x) =>
 			{
 				var c = x.gameObject.AddComponent<GottaSweepComponent>();
 				c.aud_sweep = aud;
+
+				var comp = x.gameObject.AddComponent<GenericAnimationExtraComponent>();
+				comp.sprites = new Sprite[7];
+				comp.sprites[0] = x.spriteRenderer[0].sprite;
+				for (int i = 1; i < comp.sprites.Length; i++)
+					comp.sprites[i] = AssetLoader.SpriteFromTexture2D(AssetLoader.TextureFromFile(Path.Combine(ModPath, $"sweep_{i}.png")), 26f);
 			});
 
 		}
