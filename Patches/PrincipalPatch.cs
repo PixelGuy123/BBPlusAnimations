@@ -74,5 +74,30 @@ namespace BBPlusAnimations.Patches
 			yield break;
 		}
 
+		[HarmonyPatch("SendToDetention")]
+		[HarmonyPrefix]
+		static void CoolDetentionAnimation(Principal __instance)
+		{
+			if (__instance.ec.offices.Count > 0)
+				__instance.StartCoroutine(DetentionAnimation(__instance.spriteRenderer[0], __instance));
+		}
+
+		static IEnumerator DetentionAnimation(SpriteRenderer renderer, Principal p)
+		{
+			float time = 3f;
+			while (time > 0f)
+			{
+				time -= p.TimeScale * Time.deltaTime;
+				renderer.sprite = sprites[1 + (Mathf.FloorToInt(Time.fixedTime * 8f * p.TimeScale) % (sprites.Length - 1))];
+				yield return null;
+			}
+			renderer.sprite = sprites[0];
+
+			yield break;
+		}
+
+		internal static Sprite[] sprites;
+
+
 	}
 }

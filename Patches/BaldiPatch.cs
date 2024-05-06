@@ -1,13 +1,14 @@
-﻿using HarmonyLib;
+﻿using BBPlusAnimations.Components;
+using HarmonyLib;
 using PixelInternalAPI.Components;
 using UnityEngine;
 
 namespace BBPlusAnimations.Patches
 {
-	[HarmonyPatch(typeof(Baldi))]
+	[HarmonyPatch]
 	internal class BaldiPatch
 	{
-		[HarmonyPatch("SlapBreak")]
+		[HarmonyPatch(typeof(Baldi), "SlapBreak")]
 		[HarmonyPostfix]
 		private static void BreakWithBeauty(Baldi __instance)
 		{
@@ -17,6 +18,31 @@ namespace BBPlusAnimations.Patches
 			p.gameObject.SetActive(true);
 		}
 
+		[HarmonyPatch(typeof(Baldi), "TakeApple")]
+		[HarmonyPrefix]
+		static void GetAppleParticles(Baldi __instance)
+		{
+			var part = Object.Instantiate(appleParticles);
+			part.transform.position = __instance.transform.position + Vector3.up;
+			part.gameObject.SetActive(true);
+			__instance.GetComponent<BaldiEatAppleComponent>().particles = part;
+		}
+
+		[HarmonyPatch(typeof(Baldi), "EatSound")]
+		[HarmonyPostfix]
+		static void EatWithBeauty(Baldi __instance) =>
+			__instance.GetComponent<BaldiEatAppleComponent>().particles?.Emit(Random.Range(3, 25));
+
 		internal static TemporaryParticles particle;
+		internal static ParticleSystem appleParticles;
+
+		[HarmonyPatch(typeof(Baldi_Apple), "Update")]
+		[HarmonyPostfix]
+		static void CanDestroyParticles(Baldi ___baldi, float ___time)
+		{
+			if (___time <= 0f)
+				___baldi.GetComponent<BaldiEatAppleComponent>().SetCooldownToDestroyParticles();
+			
+		}
 	}
 }
