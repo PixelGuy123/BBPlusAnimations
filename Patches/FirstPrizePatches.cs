@@ -18,7 +18,7 @@ namespace BBPlusAnimations.Patches
 			smoke.transform.SetParent(___firstPrize.transform);
 			smoke.transform.localPosition = Vector3.down;
 
-			smoke.gameObject.SetActive(true);
+			//smoke.gameObject.SetActive(true);
 
 		}
 

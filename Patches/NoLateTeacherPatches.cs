@@ -1,7 +1,7 @@
 ﻿using BBPlusAnimations.Components;
 using HarmonyLib;
-using PixelInternalAPI.Classes;
-using PixelInternalAPI.Components;
+using MTM101BaldAPI.Components;
+using PixelInternalAPI.Extensions;
 using System.Collections;
 using UnityEngine;
 
@@ -13,7 +13,7 @@ namespace BBPlusAnimations.Patches
 		[HarmonyPatch(typeof(NoLateTeacher), "Attack")]
 		[HarmonyPrefix]
 		private static void SetFovToPlayer(PlayerManager player) =>
-			Singleton<CoreGameManager>.Instance.GetCamera(player.playerNumber).GetComponent<CustomPlayerCameraComponent>().ShakeFOVAnimation(new BaseModifier(), intensity: 55f, shakeCooldown: 2f);
+			player.GetCustomCam().ShakeFOVAnimation(new ValueModifier(), intensity: 55f, shakeCooldown: 2f);
 
 		[HarmonyPatch(typeof(NoLateTeacher_Wander), "PlayerInSight")]
 		[HarmonyPostfix]

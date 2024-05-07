@@ -1,6 +1,6 @@
 ﻿using HarmonyLib;
-using PixelInternalAPI.Classes;
-using PixelInternalAPI.Components;
+using MTM101BaldAPI.Components;
+using PixelInternalAPI.Extensions;
 
 namespace BBPlusAnimations.Patches
 {
@@ -13,7 +13,7 @@ namespace BBPlusAnimations.Patches
 			if (Singleton<CoreGameManager>.Instance.currentMode == Mode.Main)
 			{
 				for (int i = 0; i < Singleton<CoreGameManager>.Instance.setPlayers; i++)
-					Singleton<CoreGameManager>.Instance.GetCamera(i).GetComponent<CustomPlayerCameraComponent>().ReverseSlideFOVAnimation(new BaseModifier(), 35f, 5f);
+					Singleton<CoreGameManager>.Instance.GetCamera(i).GetCustomCam().ReverseSlideFOVAnimation(new ValueModifier(), 35f, 5f);
 			}
 		}
 	}

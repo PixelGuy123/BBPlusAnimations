@@ -8,6 +8,7 @@ using MTM101BaldAPI.Registers;
 using PixelInternalAPI.Classes;
 using PixelInternalAPI.Components;
 using PixelInternalAPI.Extensions;
+using System.Collections;
 using System.IO;
 using UnityEngine;
 using UnityEngine.UI;
@@ -24,6 +25,7 @@ namespace BBPlusAnimations
 	{
 		private void Awake()
 		{
+
 			try
 			{
 				Harmony h = new(ModInfo.PLUGIN_GUID);
@@ -39,31 +41,22 @@ namespace BBPlusAnimations
 
 			ModPath = AssetLoader.GetModPath(this);
 
-			LoadingEvents.RegisterOnAssetsLoaded(() =>
-			{
-				try
-				{
-					OnAssetLoad();
-				}
-				catch (System.Exception e)
-				{
-					Debug.LogException(e);
-					MTM101BaldiDevAPI.CauseCrash(Info, e);
-				}
-			}, false);
+			LoadingEvents.RegisterOnAssetsLoaded(Info, OnAssetLoad(), false);
 
 
 		}
 
-		void OnAssetLoad()
+		IEnumerator OnAssetLoad()
 		{
-
+			yield return enumeratorReturnSize;
+			yield return "Grabbing material...";
 			// Particle Material
 			man.Add("particleMaterial", Items.ChalkEraser.GetFirstInstance().item.GetComponent<ParticleSystemRenderer>().material);
 
 			// Overlay
 			man.Add("gumOverlay", GenericExtensions.FindResourceObjectByName<Canvas>("GumOverlay"));
 
+			yield return "Creating gum splash asset...";
 			// Gum
 			var gumHolder = new GameObject("gumSplash");
 			var gum = ObjectCreationExtensions.CreateSpriteBillboard(AssetLoader.SpriteFromTexture2D(AssetLoader.TextureFromFile(Path.Combine(ModPath, "gumSplash.png")), 25f), false).gameObject;
@@ -74,13 +67,14 @@ namespace BBPlusAnimations
 			gum.transform.SetParent(gumHolder.transform);
 			gum.transform.localPosition = Vector3.zero + (gum.transform.forward * -0.01f);
 
-			gumHolder.SetAsPrefab();
+			gumHolder.ConvertToPrefab(true);
 
 			gumHolder.AddComponent<EmptyMonoBehaviour>(); // For coroutines
 			GumSplash.gumSplash = gumHolder.transform;
 
 			GumSplash.splash = ObjectCreators.CreateSoundObject(AssetLoader.AudioClipFromFile(Path.Combine(ModPath, "gumSplash.wav")), "Vfx_GumSplash", SoundType.Voice, new(1, 0.2039f, 0.8863f));
 
+			yield return "Enabling bsoda particles...";
 			// Bsoda particles
 			GenericExtensions.FindResourceObjects<ITM_BSODA>().Do((x) =>
 			{
@@ -88,10 +82,12 @@ namespace BBPlusAnimations
 				r.gameObject.SetActive(true);
 				r.transform.localPosition = Vector3.zero; // maybe this is the issue?
 			});
+			yield return "Adding door locks for doors...";
 			Texture2D[] texs = [AssetLoader.TextureFromFile(Path.Combine(ModPath, "doorLock.png")), AssetLoader.TextureFromFile(Path.Combine(ModPath, "doorLock_left.png"))];
 			// Door
 			GenericExtensions.FindResourceObjects<StandardDoor>().Do(d => d.gameObject.AddComponent<StandardDoorExtraMaterials>().defaultTex = texs);// Sets a lock
 
+			yield return "Loading balloon pop animations...";
 			// Balloon Pop Animation
 			NumberBalloonPatch.explodeVisuals = new Sprite[6];
 			for (int i = 0; i < NumberBalloonPatch.explodeVisuals.Length; i++)
@@ -99,13 +95,12 @@ namespace BBPlusAnimations
 			NumberBalloonPatch.sound = ObjectCreators.CreateSoundObject(AssetLoader.AudioClipFromFile(Path.Combine(ModPath, "BalloonRespawn.wav")), "something", SoundType.Voice, Color.white);
 			NumberBalloonPatch.sound.subtitle = false; // No sub
 
+			yield return "Loading the test\'s animation...";
 			// TheTestAnimation
 
 			var canvas = Instantiate(man.Get<Canvas>("gumOverlay")); // Only way to make a proper overlay on this
 
-			var img = canvas.transform.Find("Image").GetComponent<Image>();
-
-			canvas.gameObject.SetAsPrefab();
+			canvas.gameObject.ConvertToPrefab(true);
 
 
 			TheTestPatch.sprites = new Sprite[7];
@@ -114,25 +109,31 @@ namespace BBPlusAnimations
 			for (int i = 1; i < TheTestPatch.sprites.Length; i++)
 				TheTestPatch.sprites[i] = AssetLoader.SpriteFromTexture2D(AssetLoader.TextureFromFile(Path.Combine(ModPath, $"theTestblind_{i - 3}.png")), 1f);
 
-			img.name = "TheTestOverlay";
-			TheTestPatch.img = img;
 			canvas.name = "TheTestOverlayCanvas";
 			TheTestPatch.canvas = canvas;
 
+			yield return "Loading playtime\'s jumprope cut animation...";
 			// Jumprope Sprites
 			PlaytimeJumpropePatch.sprites = new Sprite[6];
 			for (int i = 0; i < PlaytimeJumpropePatch.sprites.Length; i++)
 				PlaytimeJumpropePatch.sprites[i] = AssetLoader.SpriteFromTexture2D(AssetLoader.TextureFromFile(Path.Combine(ModPath, $"jmpropecut_{i}.png")), 1f);
+			GenericExtensions.FindResourceObjects<Jumprope>().Do((x) =>
+			{
+				var comp = x.gameObject.AddComponent<GenericAnimationExtraComponent>();
+				comp.sprites = null; // No reference in this
+			});
 
+			yield return "Loading Baldi\'s Explorer mode easter egg...";
 			// Baldi Haha
 			var baldiRender = ObjectCreationExtensions.CreateSpriteBillboard(null);
 			var baldi = baldiRender.gameObject.AddComponent<BaldiFloatsAway>();
 			baldi.name = "BaldiTheFloater";
 			baldi.renderer = baldiRender;
 			baldi.sprites = GenericExtensions.FindResourceObject<BaldiDance>().danceSprites; //(Sprite[])GenericExtensions.FindResourceObject<BaldiDance>().ReflectionGetVariable("danceSprites"); // First time I'm using the api reflection lol
-			baldi.gameObject.SetAsPrefab();
+			baldi.gameObject.ConvertToPrefab(true);
 			HappyBaldiPatch.baldi = baldi;
 
+			yield return "Loading chalkle\'s laughing animation...";
 			// Chalkles component
 			GenericExtensions.FindResourceObjects<ChalkFace>().Do((x) =>
 			{
@@ -140,24 +141,22 @@ namespace BBPlusAnimations
 				comp.sprites[1] = AssetLoader.SpriteFromTexture2D(AssetLoader.TextureFromFile(Path.Combine(ModPath, "ChalkFace_1.png")), new Vector2(0.5f, 0.25f), 25f);
 			});
 
-			// JumpRope Quick Fix
-			GenericExtensions.FindResourceObjects<Jumprope>().Do((x) =>
-			{
-				var comp = x.gameObject.AddComponent<GenericAnimationExtraComponent>();
-				comp.sprites = null; // No reference in this
-			});
 
+
+			yield return "Loading gum\'s overlay animation...";
 			// Gum overlay animation
 			GumSplash.sprites = new Sprite[6];
 			GumSplash.sprites[5] = man.Get<Canvas>("gumOverlay").GetComponentInChildren<Image>().sprite;  // There must be at least one
 			for (int i = 0; i < GumSplash.sprites.Length - 1; i++)
 				GumSplash.sprites[i] = AssetLoader.SpriteFromTexture2D(AssetLoader.TextureFromFile(Path.Combine(ModPath, $"gumOverlay_{i + 1}.png")), 1f);
 
+			yield return "Loading cloudy\'s copter audios...";
 			// Cloudy Copter assets and components
 			GenericExtensions.FindResourceObjects<Cumulo>().DoIf(x => !x.GetComponent<PropagatedAudioManager>(), x => x.gameObject.CreatePropagatedAudioManager(45, 75));
 			CumuloPatch.blowBeforeBlowing = ObjectCreators.CreateSoundObject(AssetLoader.AudioClipFromFile(Path.Combine(ModPath, "CC_Blow.wav")), "Vfx_CC_Breath", SoundType.Voice, Color.white);
 			CumuloPatch.pah = ObjectCreators.CreateSoundObject(AssetLoader.AudioClipFromFile(Path.Combine(ModPath, "CC_PAH.wav")), "Vfx_CC_PAH", SoundType.Voice, Color.white);
 
+			yield return "Loading portal poster\'s animation...";
 			// Portal Posters
 			var portalPoster = GenericExtensions.FindResourceObjectByName<WindowObject>("PortalPosterWindow");
 			var portal = portalPoster.windowPre.gameObject.AddComponent<TextureAnimator>(); // Texture animator setup
@@ -169,6 +168,7 @@ namespace BBPlusAnimations
 			for (int i = 1; i < portal.texs.Length; i++)
 				portal.texs[i] = AssetLoader.TextureFromFile(Path.Combine(ModPath, $"portalPoster_{i}.png"));
 
+			yield return "Loading plant particles...";
 			// Plant Particles
 			Sprite[] plantSprites = new Sprite[6];
 			for (int i = 1; i < plantSprites.Length; i++)
@@ -236,9 +236,10 @@ namespace BBPlusAnimations
 
 			});
 
+			yield return "Loading flipper\'s particles...";
 			// Flipper Particle
 			var flipperParticle = new GameObject("flipperParticle", typeof(ParticleSystem));
-			flipperParticle.SetAsPrefab();
+			flipperParticle.ConvertToPrefab(true);
 
 			flipperParticle.GetComponent<ParticleSystemRenderer>().material = new(man.Get<Material>("particleMaterial")) { mainTexture = AssetLoader.TextureFromFile(Path.Combine(ModPath, "flipperParticle.png")) };
 
@@ -287,6 +288,7 @@ namespace BBPlusAnimations
 			//FieldInfo tapePlayer_usedSprite = AccessTools.Field(typeof(TapePlayer), "usedSprite");
 
 			// The editor somehow breaks Resources
+			yield return "Loading the pay phone\'s sprite...";
 			GenericExtensions.FindResourceObjects<TapePlayer>().Do(x =>
 			{
 				if (x.name == "PayPhone") // everything was null, wow
@@ -299,8 +301,9 @@ namespace BBPlusAnimations
 			});
 
 			// Baldi Ruler Break Particles
+			yield return "Loading Baldi\'s ruler particles...";
 			var rulerParticle = new GameObject("rulerParticle", typeof(ParticleSystem));
-			rulerParticle.SetAsPrefab();
+			rulerParticle.ConvertToPrefab(true);
 
 			rulerParticle.GetComponent<ParticleSystemRenderer>().material = new(man.Get<Material>("particleMaterial")) { mainTexture = AssetLoader.TextureFromFile(Path.Combine(ModPath, "rulerPiece.png")) };
 
@@ -337,12 +340,15 @@ namespace BBPlusAnimations
 
 			// Arts and Crafters speed increase
 			//FieldInfo attackSpeed = AccessTools.Field(typeof(ArtsAndCrafters), "attackSpinAccel");
+			yield return "Setting Arts and Crafters spin acceleration...";
 			GenericExtensions.FindResourceObjects<ArtsAndCrafters>().Do(x => x.attackSpinAccel = 80f); //attackSpeed.SetValue(x, 80f));
 
+			yield return "Loading water fountain\'s water...";
 			// Water fountain water
 			GenericAnimation.spoutWater = AssetLoader.SpriteFromTexture2D(AssetLoader.TextureFromFile(Path.Combine(ModPath, "spoutSpit.png")), new Vector2(0.75f, 0.5f), 75f);
 			GenericAnimation.normalSpout = GenericExtensions.FindResourceObject<WaterFountain>().transform.Find("FountainSpout").GetComponent<SpriteRenderer>().sprite; // yes
 
+			yield return "Loading first prize\'s new assets...";
 			// Smoke for 1st prize/new audio
 			var smokeParticle = new GameObject("SmokeParticles").AddComponent<ParticleSystem>();
 			var renderer = smokeParticle.GetComponent<ParticleSystemRenderer>();
@@ -355,13 +361,13 @@ namespace BBPlusAnimations
 			crack.transform.SetParent(crackHolder.transform);
 			crack.transform.localPosition = Vector3.zero;
 
-			crackHolder.SetAsPrefab();
+			crackHolder.ConvertToPrefab(true);
 			crackHolder.AddComponent<EmptyMonoBehaviour>();
 
 			FirstPrizePatches.cracks = crackHolder;
 
 
-			smokeParticle.gameObject.SetAsPrefab();
+			smokeParticle.gameObject.ConvertToPrefab(true);
 
 			var rotLife = smokeParticle.rotationOverLifetime;
 			rotLife.enabled = true;
@@ -395,10 +401,12 @@ namespace BBPlusAnimations
 
 			FirstPrizePatches.smokes = smokeParticle;
 
+			yield return "Loading bully\'s blinking animation...";
 			// Bully blinking
 			BullyBlinkComponent.bullyBlink = AssetLoader.SpriteFromTexture2D(AssetLoader.TextureFromFile(Path.Combine(ModPath, "bully_blink.png")), 26f);
 			GenericExtensions.FindResourceObjects<Bully>().Do(x => x.gameObject.AddComponent<BullyBlinkComponent>());
 
+			yield return "Loading Gotta Sweep\'s sweping animation...";
 			// Gotta sweep audio and tex
 			var aud = ObjectCreators.CreateSoundObject(AssetLoader.AudioClipFromFile(Path.Combine(ModPath, "GS_Sweeping.wav")), "Vfx_GottaSweep", SoundType.Voice, new(0, 0.6226f, 0.0614f));
 			GenericExtensions.FindResourceObjects<GottaSweep>().Do((x) =>
@@ -413,6 +421,7 @@ namespace BBPlusAnimations
 					comp.sprites[i] = AssetLoader.SpriteFromTexture2D(AssetLoader.TextureFromFile(Path.Combine(ModPath, $"sweep_{i}.png")), x.spriteRenderer[0].sprite.pixelsPerUnit);
 			});
 
+			yield return "Loading Mrs Pomp looking animation...";
 			// Mrs Pomp looking at ya
 			GenericExtensions.FindResourceObjects<NoLateTeacher>().Do(x =>
 			{
@@ -423,6 +432,7 @@ namespace BBPlusAnimations
 					a.sprites[i] = AssetLoader.SpriteFromTexture2D(AssetLoader.TextureFromFile(Path.Combine(ModPath, $"pompLookAt{i - 1}.png")), x.normalSprite.pixelsPerUnit);
 			});
 
+			yield return "Loading playtime\'s happy face animation...";
 			// playtime happy visual
 			GenericExtensions.FindResourceObjects<Playtime>().Do(x =>
 			{
@@ -432,13 +442,14 @@ namespace BBPlusAnimations
 					a.sprites[i] = AssetLoader.SpriteFromTexture2D(AssetLoader.TextureFromFile(Path.Combine(ModPath, $"playtimeHappy{i}.png")), x.spriteRenderer[0].sprite.pixelsPerUnit);
 			});
 
+			yield return "Loading Baldi eating apple particles...";
 			// Baldi eat apple particles
 			GenericExtensions.FindResourceObjects<Baldi>().Do(x =>
 			{
 				var appleParticle = new GameObject("appleParticle", typeof(ParticleSystem));
 
 				appleParticle.GetComponent<ParticleSystemRenderer>().material = new(man.Get<Material>("particleMaterial")) { mainTexture = AssetLoader.TextureFromFile(Path.Combine(ModPath, "applePiece.png")) };
-				appleParticle.SetAsPrefab();
+				appleParticle.ConvertToPrefab(true);
 
 				particleSystem = appleParticle.GetComponent<ParticleSystem>();
 
@@ -466,6 +477,7 @@ namespace BBPlusAnimations
 				BaldiPatch.appleParticles = particleSystem;
 			});
 
+			yield return "Replacing zesty bar\'s eating noise...";
 			// Zesty Bar audio change
 			//FieldInfo zestyBarAud = AccessTools.Field(typeof(ITM_ZestyBar), "audEat");
 			var zestyEatAudio = AssetLoader.AudioClipFromFile(Path.Combine(ModPath, "zesty_eating.wav"));
@@ -477,6 +489,7 @@ namespace BBPlusAnimations
 				//zestyBarAud.SetValue(zesty, audio); // << idk if I need this, but whatever
 			}
 
+			yield return "Loading Principal\'s whistle animation...";
 			// Principal's Whistle actually visible
 			var whistletex = AssetLoader.SpriteFromTexture2D(AssetLoader.TextureFromFile(Path.Combine(ModPath, "whistleScreen.png")), 1f);
 			GenericExtensions.FindResourceObjects<ITM_PrincipalWhistle>().Do(x =>
@@ -488,6 +501,7 @@ namespace BBPlusAnimations
 				principalCanvas.transform.localPosition = Vector3.zero;
 			});
 
+			yield return "Loading Big Ol\' Boots noises...";
 			// Big ol' Boots footsteps
 			var step1 = ObjectCreators.CreateSoundObject(AssetLoader.AudioClipFromFile(Path.Combine(ModPath, "step0.wav")), string.Empty, SoundType.Effect, Color.white);
 			step1.subtitle = false;
@@ -503,18 +517,21 @@ namespace BBPlusAnimations
 			});
 			// ITM_Bsodas already have a 0 scale as default lol
 			GenericExtensions.FindResourceObjects<ITM_BSODA>().Do(x => x.transform.localScale = Vector3.one * 0.1f);
+			yield return "Loading Principal\'s animation...";
 			// principal detention animation
 			PrincipalPatch.sprites = new Sprite[8];
-			PrincipalPatch.sprites[0] = GenericExtensions.FindResourceObject<Principal>().spriteRenderer[0].sprite;
+			PrincipalPatch.sprites[0] = GenericExtensions.FindResourceObject<Principal>().spriteRenderer[0].sprite;			
 			for (int i = 1; i < PrincipalPatch.sprites.Length; i++)
 				PrincipalPatch.sprites[i] = AssetLoader.SpriteFromTexture2D(AssetLoader.TextureFromFile(Path.Combine(ModPath, $"principalDetention{i}.png")), PrincipalPatch.sprites[0].pixelsPerUnit);
 			// Swinging door lock animation
+			yield return "Loading Swinging door locking noise...";
 			SwingingDoorPatch.audLock = ObjectCreators.CreateSoundObject(AssetLoader.AudioClipFromFile(Path.Combine(ModPath, "swingingdoorlock.wav")), "Sfx_Doors_StandardLock", SoundType.Voice, Color.white);
 
 			// Zesty eating animation
+			yield return "Loading zesty bar particles...";
 
 			var particle = new GameObject("zestyEatPiecesAnimation").AddComponent<ParticleSystem>();
-			particle.gameObject.SetAsPrefab();
+			particle.gameObject.ConvertToPrefab(true);
 
 			particle.GetComponent<ParticleSystemRenderer>().material = new(man.Get<Material>("particleMaterial"))
 			{
@@ -549,7 +566,10 @@ namespace BBPlusAnimations
 
 			ITMZestyBar.prefab = particle;
 
+			yield break;
 		}
+
+		const int enumeratorReturnSize = 30;
 
 
 		readonly AssetManager man = new();
@@ -564,6 +584,8 @@ namespace BBPlusAnimations
 
 		public const string PLUGIN_NAME = "BB+ New Animations";
 
-		public const string PLUGIN_VERSION = "1.2.0";
+		public const string PLUGIN_VERSION = "1.2.1";
 	}
+
+
 }

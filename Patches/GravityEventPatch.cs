@@ -12,7 +12,7 @@ namespace BBPlusAnimations.Patches
 			var p = Instantiate(particle);
 			p.transform.position = flipper.transform.position;
 			p.ec = ___ec;
-			p.gameObject.SetActive(true);
+			//p.gameObject.SetActive(true);
 		}
 
 		internal static TemporaryParticles particle;

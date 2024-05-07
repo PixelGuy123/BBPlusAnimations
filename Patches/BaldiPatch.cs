@@ -23,8 +23,9 @@ namespace BBPlusAnimations.Patches
 		static void GetAppleParticles(Baldi __instance)
 		{
 			var part = Object.Instantiate(appleParticles);
-			part.transform.position = __instance.transform.position + Vector3.up;
-			part.gameObject.SetActive(true);
+			part.transform.SetParent(__instance.transform);
+			part.transform.localPosition = Vector3.up;
+		//	part.gameObject.SetActive(true);
 			__instance.GetComponent<BaldiEatAppleComponent>().particles = part;
 		}
 
@@ -41,7 +42,11 @@ namespace BBPlusAnimations.Patches
 		static void CanDestroyParticles(Baldi ___baldi, float ___time)
 		{
 			if (___time <= 0f)
-				___baldi.GetComponent<BaldiEatAppleComponent>().SetCooldownToDestroyParticles();
+			{
+				var comp = ___baldi.GetComponent<BaldiEatAppleComponent>();
+				comp.particles.transform.SetParent(null, true);
+				comp.SetCooldownToDestroyParticles();
+			}
 			
 		}
 	}

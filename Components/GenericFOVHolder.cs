@@ -1,10 +1,10 @@
 ﻿using UnityEngine;
-using PixelInternalAPI.Classes;
+using MTM101BaldAPI.Components;
 
 namespace BBPlusAnimations.Components
 {
 	public class GenericFOVHolder : MonoBehaviour
 	{
-		public BaseModifier modifier = new();
+		public ValueModifier modifier = new();
 	}
 }

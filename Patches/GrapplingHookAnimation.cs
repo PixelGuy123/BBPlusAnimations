@@ -1,7 +1,7 @@
 ﻿using BBPlusAnimations.Components;
 using HarmonyLib;
 using UnityEngine;
-using PixelInternalAPI.Components;
+using PixelInternalAPI.Extensions;
 
 namespace BBPlusAnimations.Patches
 {
@@ -14,7 +14,7 @@ namespace BBPlusAnimations.Patches
 		private static void Setup(ITM_GrapplingHook __instance, PlayerManager pm)
 		{
 			var h = __instance.gameObject.AddComponent<GrapplingHookFOVHolder>();
-			Singleton<CoreGameManager>.Instance.GetCamera(pm.playerNumber).GetComponent<CustomPlayerCameraComponent>().AddModifier(h.modifier);
+			pm.GetCustomCam().AddModifier(h.modifier);
 		}
 
 		[HarmonyPatch("Update")]
@@ -30,7 +30,7 @@ namespace BBPlusAnimations.Patches
 		private static void Animation(ITM_GrapplingHook __instance, bool ___locked, float ___force, bool ___snapped, bool __state)
 		{
 			if (___locked && !___snapped && __state)
-				__instance.GetComponent<GrapplingHookFOVHolder>().modifier.Mod = initialFov + ___force * 1.2f;
+				__instance.GetComponent<GrapplingHookFOVHolder>().modifier.addend = initialFov + ___force * 1.2f;
 		}
 
 		[HarmonyPatch("End")]
@@ -39,7 +39,7 @@ namespace BBPlusAnimations.Patches
 		{
 			var cam = Singleton<CoreGameManager>.Instance.GetCamera(___pm.playerNumber);
 			var comp = __instance.GetComponent<GrapplingHookFOVHolder>();
-			cam.GetComponent<CustomPlayerCameraComponent>().ResetSlideFOVAnimation(comp.modifier, 3f);
+			cam.GetCustomCam().ResetSlideFOVAnimation(comp.modifier, 3f);
 			comp.deadLocked = true; // to not be active in Update()
 
 			___lineRenderer.enabled = false;

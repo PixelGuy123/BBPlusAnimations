@@ -18,6 +18,7 @@ namespace BBPlusAnimations.Patches
 				new(CodeInstruction.LoadField(typeof(LookAtGuy_BaseState), "theTest")),
 				new(OpCodes.Callvirt, AccessTools.Method(typeof(LookAtGuy), "Blind", []))
 			)
+			.Advance(1)
 			.InsertAndAdvance(
 				new(OpCodes.Ldarg_0),
 				CodeInstruction.LoadField(typeof(LookAtGuy_BaseState), "theTest"),
@@ -29,9 +30,9 @@ namespace BBPlusAnimations.Patches
 
 		static IEnumerator AnimatePlayerHud(PlayerManager man, LookAtGuy g)
 		{
-
+			var canvas = Object.Instantiate(TheTestPatch.canvas);
 			canvas.worldCamera = Singleton<CoreGameManager>.Instance.GetCamera(man.playerNumber).canvasCam;
-			canvas.gameObject.SetActive(true);
+			var img = canvas.GetComponentInChildren<Image>();
 			img.sprite = sprites[0];
 
 			float cooldown = 1f;
@@ -54,13 +55,12 @@ namespace BBPlusAnimations.Patches
 				yield return null;
 			}
 
-			canvas.gameObject.SetActive(false);
+			Object.Destroy(canvas);
 
 			yield break;
 		}
 
 		internal static Canvas canvas;
-		internal static Image img;
 		internal static Sprite[] sprites;
 	}
 }
