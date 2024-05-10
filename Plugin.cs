@@ -272,7 +272,7 @@ namespace BBPlusAnimations
 
 			var emitter = flipperParticle.AddComponent<TemporaryParticles>();
 			emitter.particles = particleSystem;
-			emitter.audMan = flipperParticle.CreateAudioManager(85, 105).SetAudioManagerAsPrefab();
+			emitter.audMan = flipperParticle.CreatePropagatedAudioManager(85, 105).SetAudioManagerAsPrefab();
 			emitter.audExplode = ObjectCreators.CreateSoundObject(AssetLoader.AudioClipFromFile(Path.Combine(ModPath, "flipperExplode.wav")), "Vfx_flipperExplode", SoundType.Voice, Color.white);
 			emitter.minParticles = 75;
 			emitter.maxParticles = 105;
@@ -444,38 +444,37 @@ namespace BBPlusAnimations
 
 			yield return "Loading Baldi eating apple particles...";
 			// Baldi eat apple particles
-			GenericExtensions.FindResourceObjects<Baldi>().Do(x =>
-			{
-				var appleParticle = new GameObject("appleParticle", typeof(ParticleSystem));
+			var appleParticle = new GameObject("appleParticle", typeof(ParticleSystem));
 
-				appleParticle.GetComponent<ParticleSystemRenderer>().material = new(man.Get<Material>("particleMaterial")) { mainTexture = AssetLoader.TextureFromFile(Path.Combine(ModPath, "applePiece.png")) };
-				appleParticle.ConvertToPrefab(true);
+			appleParticle.GetComponent<ParticleSystemRenderer>().material = new(man.Get<Material>("particleMaterial")) { mainTexture = AssetLoader.TextureFromFile(Path.Combine(ModPath, "applePiece.png")) };
+			appleParticle.ConvertToPrefab(true);
 
-				particleSystem = appleParticle.GetComponent<ParticleSystem>();
+			particleSystem = appleParticle.GetComponent<ParticleSystem>();
 
-				main = particleSystem.main;
-				main.gravityModifierMultiplier = 0.7f;
-				main.startLifetimeMultiplier = 3f;
-				main.startSize = new(0.1f, 0.25f);
+			main = particleSystem.main;
+			main.simulationSpace = ParticleSystemSimulationSpace.World;
+			main.gravityModifierMultiplier = 0.7f;
+			main.startLifetimeMultiplier = 3f;
+			main.startSize = new(0.1f, 0.25f);
 
-				// I don't think this is actually doing anything, but whatever
-				vel = particleSystem.velocityOverLifetime;
-				vel.enabled = true;
-				vel.x = new(-1.5f, 1f);
-				vel.y = new(1f, 2f); // "All velocities must be in the same mode" error fks up the console
-				vel.yMultiplier = 1.5f;
-				vel.z = new(-1.5f, 1f);
+			// I don't think this is actually doing anything, but whatever
+			vel = particleSystem.velocityOverLifetime;
+			vel.enabled = true;
+			vel.x = new(-1.5f, 1f);
+			vel.y = new(1f, 2f); // "All velocities must be in the same mode" error fks up the console
+			vel.yMultiplier = 1.5f;
+			vel.z = new(-1.5f, 1f);
 
 
-				main.startRotation = new(0f, 360f);
+			main.startRotation = new(0f, 360f);
 
-				emission = particleSystem.emission;
-				emission.rateOverTime = 0f;
+			emission = particleSystem.emission;
+			emission.rateOverTime = 0f;
 
-				appleParticle.transform.rotation = Quaternion.Euler(270f, 0f, 0f);
-				x.gameObject.AddComponent<BaldiEatAppleComponent>();
-				BaldiPatch.appleParticles = particleSystem;
-			});
+			appleParticle.transform.rotation = Quaternion.Euler(270f, 0f, 0f);
+			BaldiPatch.appleParticles = particleSystem;
+
+			GenericExtensions.FindResourceObjects<Baldi>().Do(x => x.gameObject.AddComponent<BaldiEatAppleComponent>());
 
 			yield return "Replacing zesty bar\'s eating noise...";
 			// Zesty Bar audio change
@@ -566,10 +565,72 @@ namespace BBPlusAnimations
 
 			ITMZestyBar.prefab = particle;
 
+			// Crafters angry animation
+			yield return "Loading crafters angry sprites...";
+
+			var craf = (ArtsAndCrafters)Character.Crafters.GetFirstInstance();
+
+			ArtsAndCraftersPatch.craftSprites = new Sprite[6];
+			for (int i = 0; i < ArtsAndCraftersPatch.craftSprites.Length; i++)
+				ArtsAndCraftersPatch.craftSprites[i] = AssetLoader.SpriteFromTexture2D(AssetLoader.TextureFromFile(Path.Combine(ModPath, $"craftersAngry{i}.png")), craf.visibleRenderer.sprite.pixelsPerUnit);
+
+			// Notebook pickup audio
+			yield return "Loading notebook audio...";
+
+			NotebookPatch.audPickNotebook = ObjectCreators.CreateSoundObject(AssetLoader.AudioClipFromFile(Path.Combine(ModPath, "notebookCollect.wav")), string.Empty, SoundType.Effect, Color.white);
+			NotebookPatch.audPickNotebook.subtitle = false; // nuh uh
+
+			// ******* Points animation *******
+			yield return "Loading points animation...";
+			
+			flipperParticle = new GameObject("pointsParticle", typeof(ParticleSystem));
+			flipperParticle.ConvertToPrefab(true);
+
+			flipperParticle.GetComponent<ParticleSystemRenderer>().material = new(man.Get<Material>("particleMaterial"));
+
+			particleSystem = flipperParticle.GetComponent<ParticleSystem>();
+
+			main = particleSystem.main;
+
+			main.gravityModifier = 0.01f;
+			main.loop = false;
+
+			main.startLifetimeMultiplier = 25f;
+			main.startSpeedMultiplier = 1f;
+			main.startSize = new(0.75f, 0.85f);
+
+			// I don't think this is actually doing anything, but whatever
+			vel = particleSystem.velocityOverLifetime;
+			vel.enabled = true;
+			vel.x = new(-10f, 10f);
+			vel.y = new(-10f, 10f);
+			vel.z = new(-10f, 10f);
+
+
+			emission = particleSystem.emission;
+			emission.rateOverTime = 0f;
+
+			emitter = flipperParticle.AddComponent<TemporaryParticles>();
+			emitter.particles = particleSystem;
+			emitter.minParticles = 35;
+			emitter.maxParticles = 45;
+
+			flipperParticle.transform.rotation = Quaternion.Euler(270f, 0f, 0f);
+
+			PickupPatches.particles = emitter;
+			PickupPatches.audCollect = GenericExtensions.FindResourceObjectByName<SoundObject>("Xylophone"); // Xylophone
+			// Field trip win sound thing
+			yield return "Loading field trip win sound...";
+			FieldTripManagerPatch.fieldTripYay = ObjectCreators.CreateSoundObject(AssetLoader.AudioClipFromFile(Path.Combine(ModPath, "Animation_MUS_FieldTripWin.wav")), string.Empty, SoundType.Music, Color.white);
+			FieldTripManagerPatch.fieldTripYay.subtitle = false; // Of course
+			// WOOOOW Math machine noises
+			yield return "Loading WOOOOOOW...";
+			MathMachinePatch.aud_BalWow = ObjectCreators.CreateSoundObject(AssetLoader.AudioClipFromFile(Path.Combine(ModPath, "Animation_BAL_Wow.wav")), "Vfx_Bal_WOW", SoundType.Voice, Color.green);
+
 			yield break;
 		}
 
-		const int enumeratorReturnSize = 30;
+		const int enumeratorReturnSize = 35;
 
 
 		readonly AssetManager man = new();

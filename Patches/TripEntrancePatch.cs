@@ -20,6 +20,7 @@ namespace BBPlusAnimations.Patches
 			if (__state == ___entered) return;
 
 			__instance.StartCoroutine(BusGoAway(__instance.transform.Find("Door_Swinging").Find("Bus"), ___ec));
+			__instance.StartCoroutine(BusGoAway(__instance.transform.Find("Door_Swinging").Find("Bus_1"), ___ec));
 		}
 
 		static IEnumerator BusGoAway(Transform bus, EnvironmentController ec)

@@ -9,8 +9,15 @@ namespace BBPlusAnimations.Patches
 	internal class MathMachinePatch
 	{
 		[HarmonyPatch("Completed")]
-		private static void Postfix(TMP_Text ___answerText, MathMachine __instance) =>
+		private static void Postfix(TMP_Text ___answerText, MathMachine __instance, ref AudioManager ___audMan, bool ___givePoints)
+		{
 			__instance.StartCoroutine(Animation(__instance.room.ec, ___answerText.transform));
+			if (___givePoints && aud_BalWow != null)
+				___audMan.PlaySingle(aud_BalWow);
+		}
+
+
+		internal static SoundObject aud_BalWow;
 
 		private static IEnumerator Animation(EnvironmentController ec, Transform transform)
 		{
