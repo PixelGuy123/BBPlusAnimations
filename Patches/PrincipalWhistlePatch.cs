@@ -24,10 +24,10 @@ namespace BBPlusAnimations.Patches
 		[HarmonyPrefix]
 		static void WhistleAnimation(PlayerManager pm, ITM_PrincipalWhistle __instance)
 		{
-			var canvas = __instance.transform.Find("PrincipalCanvas");
+			var canvas = __instance.transform.Find("PrincipalWhistleCanvas");
 			canvas.gameObject.SetActive(true);
 			canvas.GetComponent<Canvas>().worldCamera = Singleton<CoreGameManager>.Instance.GetCamera(pm.playerNumber).canvasCam;
-			__instance.StartCoroutine(WhistleAnimation(pm, canvas.transform.Find("Image"), __instance));
+			__instance.StartCoroutine(WhistleAnimation(pm, canvas.GetComponentInChildren<UnityEngine.UI.Image>().transform, __instance));
 		}
 		
 

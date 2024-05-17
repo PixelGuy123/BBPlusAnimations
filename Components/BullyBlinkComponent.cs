@@ -12,6 +12,12 @@ namespace BBPlusAnimations.Components
 
 		void Update()
 		{
+			if (!blink)
+			{
+				target.spriteRenderer[0].sprite = bullyCatch;
+				return;
+			}
+
 			if (blinkTime > 0f)
 			{
 				blinkTime -= target.TimeScale * Time.deltaTime;
@@ -44,8 +50,13 @@ namespace BBPlusAnimations.Components
 		Bully target;
 
 		[SerializeField]
-		Sprite bullyNormal;
+		internal Sprite bullyNormal;
 
-		internal static Sprite bullyBlink;
+		[SerializeField]
+		internal SpriteRenderer itemRenderer;
+
+		internal static Sprite bullyBlink, bullyCatch;
+
+		internal bool blink = true;
 	}
 }

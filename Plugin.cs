@@ -1,6 +1,7 @@
 ﻿using BBPlusAnimations.Components;
 using BBPlusAnimations.Patches;
 using BepInEx;
+using BepInEx.Logging;
 using HarmonyLib;
 using MTM101BaldAPI;
 using MTM101BaldAPI.AssetTools;
@@ -25,7 +26,7 @@ namespace BBPlusAnimations
 	{
 		private void Awake()
 		{
-
+			logger = Logger;
 			try
 			{
 				Harmony h = new(ModInfo.PLUGIN_GUID);
@@ -49,12 +50,10 @@ namespace BBPlusAnimations
 		IEnumerator OnAssetLoad()
 		{
 			yield return enumeratorReturnSize;
+
 			yield return "Grabbing material...";
 			// Particle Material
 			man.Add("particleMaterial", Items.ChalkEraser.GetFirstInstance().item.GetComponent<ParticleSystemRenderer>().material);
-
-			// Overlay
-			man.Add("gumOverlay", GenericExtensions.FindResourceObjectByName<Canvas>("GumOverlay"));
 
 			yield return "Creating gum splash asset...";
 			// Gum
@@ -98,7 +97,8 @@ namespace BBPlusAnimations
 			yield return "Loading the test\'s animation...";
 			// TheTestAnimation
 
-			var canvas = Instantiate(man.Get<Canvas>("gumOverlay")); // Only way to make a proper overlay on this
+			var canvas = ObjectCreationExtensions.CreateCanvas();
+			ObjectCreationExtensions.CreateImage(canvas);
 
 			canvas.gameObject.ConvertToPrefab(true);
 
@@ -146,7 +146,7 @@ namespace BBPlusAnimations
 			yield return "Loading gum\'s overlay animation...";
 			// Gum overlay animation
 			GumSplash.sprites = new Sprite[6];
-			GumSplash.sprites[5] = man.Get<Canvas>("gumOverlay").GetComponentInChildren<Image>().sprite;  // There must be at least one
+			GumSplash.sprites[5] = Resources.FindObjectsOfTypeAll<Gum>()[0].canvas.GetComponentInChildren<Image>().sprite;  // There must be at least one
 			for (int i = 0; i < GumSplash.sprites.Length - 1; i++)
 				GumSplash.sprites[i] = AssetLoader.SpriteFromTexture2D(AssetLoader.TextureFromFile(Path.Combine(ModPath, $"gumOverlay_{i + 1}.png")), 1f);
 
@@ -272,7 +272,7 @@ namespace BBPlusAnimations
 
 			var emitter = flipperParticle.AddComponent<TemporaryParticles>();
 			emitter.particles = particleSystem;
-			emitter.audMan = flipperParticle.CreatePropagatedAudioManager(85, 105).SetAudioManagerAsPrefab();
+			emitter.audMan = flipperParticle.CreatePropagatedAudioManager(85, 105);
 			emitter.audExplode = ObjectCreators.CreateSoundObject(AssetLoader.AudioClipFromFile(Path.Combine(ModPath, "flipperExplode.wav")), "Vfx_flipperExplode", SoundType.Voice, Color.white);
 			emitter.minParticles = 75;
 			emitter.maxParticles = 105;
@@ -401,10 +401,26 @@ namespace BBPlusAnimations
 
 			FirstPrizePatches.smokes = smokeParticle;
 
-			yield return "Loading bully\'s blinking animation...";
-			// Bully blinking
+			yield return "Loading bully\'s animations...";
+			// Bully blinking and catching items
 			BullyBlinkComponent.bullyBlink = AssetLoader.SpriteFromTexture2D(AssetLoader.TextureFromFile(Path.Combine(ModPath, "bully_blink.png")), 26f);
-			GenericExtensions.FindResourceObjects<Bully>().Do(x => x.gameObject.AddComponent<BullyBlinkComponent>());
+			BullyBlinkComponent.bullyCatch = AssetLoader.SpriteFromTexture2D(AssetLoader.TextureFromFile(Path.Combine(ModPath, "bullyHappy.png")), 26f);
+			GenericExtensions.FindResourceObjects<Bully>().Do(x => 
+			{
+				var comp = x.gameObject.AddComponent<BullyBlinkComponent>();
+				comp.itemRenderer = ObjectCreationExtensions.CreateSpriteBillboard(null);
+
+				var block = new MaterialPropertyBlock();
+				x.spriteToHide.GetPropertyBlock(block);
+
+				var obj = new GameObject("SpriteRenderHolder", typeof(BillboardRotator));
+				comp.itemRenderer.transform.SetParent(obj.transform);
+				comp.itemRenderer.transform.localPosition = BullyPatch.GetPos(block.GetFloat("_SpriteRotation")); // TO-DO: Some function that relates the sprite rotation to the current offset (maybe use sin or cos)
+				comp.itemRenderer.enabled = false;
+
+				obj.transform.SetParent(x.transform);
+				obj.transform.localPosition = Vector3.zero;
+			});
 
 			yield return "Loading Gotta Sweep\'s sweping animation...";
 			// Gotta sweep audio and tex
@@ -493,9 +509,10 @@ namespace BBPlusAnimations
 			var whistletex = AssetLoader.SpriteFromTexture2D(AssetLoader.TextureFromFile(Path.Combine(ModPath, "whistleScreen.png")), 1f);
 			GenericExtensions.FindResourceObjects<ITM_PrincipalWhistle>().Do(x =>
 			{
-				var principalCanvas = Instantiate(man.Get<Canvas>("gumOverlay")); // Only way to make a proper overlay on this
-				principalCanvas.name = "PrincipalCanvas";
-				principalCanvas.GetComponentInChildren<Image>().sprite = whistletex;
+
+				var principalCanvas = ObjectCreationExtensions.CreateCanvas(); // Only way to make a proper overlay on this
+				principalCanvas.name = "PrincipalWhistleCanvas";
+				ObjectCreationExtensions.CreateImage(principalCanvas, whistletex);
 				principalCanvas.transform.SetParent(x.transform);
 				principalCanvas.transform.localPosition = Vector3.zero;
 			});
@@ -512,7 +529,7 @@ namespace BBPlusAnimations
 				var comp = x.gameObject.AddComponent<BootsDistanceReach>();
 				comp.audFootstep = step1;
 				comp.audFootstep2 = step2;
-				comp.audMan = x.gameObject.CreateAudioManager(45f, 65f).MakeAudioManagerNonPositional().SetAudioManagerAsPrefab();
+				comp.audMan = x.gameObject.CreateAudioManager(45f, 65f).MakeAudioManagerNonPositional();
 			});
 			// ITM_Bsodas already have a 0 scale as default lol
 			GenericExtensions.FindResourceObjects<ITM_BSODA>().Do(x => x.transform.localScale = Vector3.one * 0.1f);
@@ -619,21 +636,43 @@ namespace BBPlusAnimations
 
 			PickupPatches.particles = emitter;
 			PickupPatches.audCollect = GenericExtensions.FindResourceObjectByName<SoundObject>("Xylophone"); // Xylophone
-			// Field trip win sound thing
-			yield return "Loading field trip win sound...";
-			FieldTripManagerPatch.fieldTripYay = ObjectCreators.CreateSoundObject(AssetLoader.AudioClipFromFile(Path.Combine(ModPath, "Animation_MUS_FieldTripWin.wav")), string.Empty, SoundType.Music, Color.white);
-			FieldTripManagerPatch.fieldTripYay.subtitle = false; // Of course
 			// WOOOOW Math machine noises
 			yield return "Loading WOOOOOOW...";
 			MathMachinePatch.aud_BalWow = ObjectCreators.CreateSoundObject(AssetLoader.AudioClipFromFile(Path.Combine(ModPath, "Animation_BAL_Wow.wav")), "Vfx_Bal_WOW", SoundType.Voice, Color.green);
 
+			// Fog music change
+			yield return "Changing the fog song...";
+			var fogSound = AssetLoader.AudioClipFromFile(Path.Combine(ModPath, "newFog_CreepyOldComputer.wav"));
+
+			GenericExtensions.FindResourceObjects<FogEvent>().Do(x => x.music.soundClip = fogSound); // Replace fog music
+
+			// Nana Peels slipping animation
+			yield return "Creating nana peel\'s slipping animation...";
+
+			var visual = AssetLoader.SpriteFromTexture2D(AssetLoader.TextureFromFile(Path.Combine(ModPath, "slippingWind.png")), 25f);
+
+			GenericExtensions.FindResourceObjects<ITM_NanaPeel>().Do(x =>
+			{
+				var slip = ObjectCreationExtensions.CreateSpriteBillboard(visual, false);
+				var slipper = slip.gameObject.AddComponent<NanaPeelSlipper>();
+				slipper.renderer = slip;
+
+				slipper.transform.SetParent(x.transform);
+				slipper.transform.localPosition = Vector3.zero;
+
+				slipper.SetMyPeel(x);			
+			});
+			
+
 			yield break;
 		}
 
-		const int enumeratorReturnSize = 35;
+		const int enumeratorReturnSize = 36;
 
 
 		readonly AssetManager man = new();
+
+		internal static BepInEx.Logging.ManualLogSource logger;
 
 
 		internal static string ModPath = string.Empty;
@@ -645,7 +684,7 @@ namespace BBPlusAnimations
 
 		public const string PLUGIN_NAME = "BB+ New Animations";
 
-		public const string PLUGIN_VERSION = "1.2.1";
+		public const string PLUGIN_VERSION = "1.2.2";
 	}
 
 

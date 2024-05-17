@@ -46,8 +46,11 @@ namespace BBPlusAnimations.Patches
 
 		[HarmonyPatch("Start")]
 		[HarmonyPostfix]
-		static void RemoveBusIfNeeded(TripEntrance __instance, bool ___entered) =>
+		static void RemoveBusIfNeeded(TripEntrance __instance, bool ___entered)
+		{
 			__instance.transform.Find("Door_Swinging").Find("Bus").gameObject.SetActive(!___entered);
+			__instance.transform.Find("Door_Swinging").Find("Bus_1").gameObject.SetActive(!___entered);
+		}
 
 		const float speedIncrease = 0.002f;
 	}

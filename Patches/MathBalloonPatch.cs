@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using System.Reflection.Emit;
 using System.Collections;
+using BBPlusAnimations.Components;
 
 namespace BBPlusAnimations.Patches
 {
@@ -38,15 +39,11 @@ namespace BBPlusAnimations.Patches
 		[HarmonyPatch("Pop")]
 		private static void Prefix(MathMachineNumber __instance, ref Transform ___sprite, bool ___popping)
 		{
-
-			if (!___popping && __instance.gameObject.activeInHierarchy)
+			if (!___popping)
 			{
 				__instance.StartCoroutine(Animation(__instance, ___sprite.GetComponent<SpriteRenderer>()));
-				return;
+				BalloonManager.i.ballsToDestroy.Add(__instance);
 			}
-
-			Object.Destroy(__instance.gameObject);
-
 		}
 
 		static IEnumerator Animation(MathMachineNumber i, SpriteRenderer renderer)
