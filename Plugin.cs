@@ -53,7 +53,7 @@ namespace BBPlusAnimations
 
 			yield return "Grabbing material...";
 			// Particle Material
-			man.Add("particleMaterial", Items.ChalkEraser.GetFirstInstance().item.GetComponent<ParticleSystemRenderer>().material);
+			man.Add("particleMaterial", ItemMetaStorage.Instance.FindByEnum(Items.ChalkEraser).value.item.GetComponent<ParticleSystemRenderer>().material);
 
 			yield return "Creating gum splash asset...";
 			// Gum
@@ -585,7 +585,7 @@ namespace BBPlusAnimations
 			// Crafters angry animation
 			yield return "Loading crafters angry sprites...";
 
-			var craf = (ArtsAndCrafters)Character.Crafters.GetFirstInstance();
+			var craf = (ArtsAndCrafters)NPCMetaStorage.Instance.Get(Character.Crafters).value;
 
 			ArtsAndCraftersPatch.craftSprites = new Sprite[6];
 			for (int i = 0; i < ArtsAndCraftersPatch.craftSprites.Length; i++)
