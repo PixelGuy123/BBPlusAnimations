@@ -41,8 +41,8 @@ namespace BBPlusAnimations.Patches
 		{
 			if (!___popping)
 			{
-				__instance.StartCoroutine(Animation(__instance, ___sprite.GetComponent<SpriteRenderer>()));
 				BalloonManager.i.ballsToDestroy.Add(__instance);
+				__instance.StartCoroutine(Animation(__instance, ___sprite.GetComponent<SpriteRenderer>()));
 			}
 		}
 

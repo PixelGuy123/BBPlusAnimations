@@ -17,23 +17,25 @@ namespace BBPlusAnimations.Patches
 		}
 
 		[HarmonyPatch("Use")]
-		private static void Postfix(ITM_BSODA __instance) =>
-			__instance.StartCoroutine(SpawnAnimation(__instance.transform, __instance.ec));
+		private static void Postfix(ITM_BSODA __instance, SpriteRenderer ___spriteRenderer) =>
+			__instance.StartCoroutine(SpawnAnimation(___spriteRenderer.transform, __instance.ec));
 
 		static IEnumerator SpawnAnimation(Transform bsoda, EnvironmentController ec)
 		{
 			float scale = 0.1f;
 			while (true)
 			{
-				scale += (1f - scale) * 0.9f * Time.deltaTime * ec.EnvironmentTimeScale;
-				if (scale >= 1f)
+				scale += (max - scale) * 0.9f * Time.deltaTime * ec.EnvironmentTimeScale;
+				if (scale >= max)
 					break;
 				
 				bsoda.localScale = Vector3.one * scale;
 				yield return null;
 			}
-			bsoda.localScale = Vector3.one;
+			bsoda.localScale = Vector3.one * max;
 			yield break;
 		}
+
+		const float max = 1f;
 	}
 }

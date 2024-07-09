@@ -22,7 +22,7 @@ namespace BBPlusAnimations
 	[BepInDependency("pixelguy.pixelmodding.baldiplus.pixelinternalapi")]
 	[BepInDependency("mtm101.rulerp.bbplus.baldidevapi")]
 
-	internal class BasePlugin : BaseUnityPlugin
+	public class BasePlugin : BaseUnityPlugin
 	{
 		private void Awake()
 		{
@@ -532,16 +532,13 @@ namespace BBPlusAnimations
 				comp.audMan = x.gameObject.CreateAudioManager(45f, 65f).MakeAudioManagerNonPositional();
 			});
 			// ITM_Bsodas already have a 0 scale as default lol
-			GenericExtensions.FindResourceObjects<ITM_BSODA>().Do(x => x.transform.localScale = Vector3.one * 0.1f);
+			GenericExtensions.FindResourceObjects<ITM_BSODA>().Do(x => x.spriteRenderer.transform.localScale = Vector3.one * 0.1f);
 			yield return "Loading Principal\'s animation...";
 			// principal detention animation
 			PrincipalPatch.sprites = new Sprite[8];
 			PrincipalPatch.sprites[0] = GenericExtensions.FindResourceObject<Principal>().spriteRenderer[0].sprite;			
 			for (int i = 1; i < PrincipalPatch.sprites.Length; i++)
 				PrincipalPatch.sprites[i] = AssetLoader.SpriteFromTexture2D(AssetLoader.TextureFromFile(Path.Combine(ModPath, $"principalDetention{i}.png")), PrincipalPatch.sprites[0].pixelsPerUnit);
-			// Swinging door lock animation
-			yield return "Loading Swinging door locking noise...";
-			SwingingDoorPatch.audLock = ObjectCreators.CreateSoundObject(AssetLoader.AudioClipFromFile(Path.Combine(ModPath, "swingingdoorlock.wav")), "Sfx_Doors_StandardLock", SoundType.Voice, Color.white);
 
 			// Zesty eating animation
 			yield return "Loading zesty bar particles...";
@@ -650,6 +647,7 @@ namespace BBPlusAnimations
 			yield return "Creating nana peel\'s slipping animation...";
 
 			var visual = AssetLoader.SpriteFromTexture2D(AssetLoader.TextureFromFile(Path.Combine(ModPath, "slippingWind.png")), 25f);
+			man.Add("nanaPeelSlide", visual);
 
 			GenericExtensions.FindResourceObjects<ITM_NanaPeel>().Do(x =>
 			{
@@ -662,17 +660,36 @@ namespace BBPlusAnimations
 
 				slipper.SetMyPeel(x);			
 			});
-			
+
+			yield return "Creating Dr Reflex\'s Hammer";
+
+			var hammer = ObjectCreationExtensions.CreateSpriteBillboard(AssetLoader.SpriteFromTexture2D(AssetLoader.TextureFromFile(Path.Combine(ModPath, "reflexHammer.png")), 65f)).AddSpriteHolder(0f, 0);
+			hammer.transform.parent.gameObject.ConvertToPrefab(true);
+
+			hammer.gameObject.AddComponent<PickupBob>();
+
+			GenericExtensions.FindResourceObjects<DrReflex>().Do(x => x.gameObject.AddComponent<DrReflexHammerComponent>().hammerPre = hammer.transform.parent);
+
+			yield return "Creating Beans' worried animation";
+
+			var beans = (Beans)NPCMetaStorage.Instance.Get(Character.Beans).value;
+			var anims = new Sprite[4];
+			for (int i = 0; i < anims.Length; i++)
+				anims[i] = AssetLoader.SpriteFromTexture2D(AssetLoader.TextureFromFile(Path.Combine(ModPath, $"beansWorried_{i}.png")), beans.spriteRenderer[0].sprite.pixelsPerUnit);
+
+			GenericExtensions.FindResourceObjects<Beans>().Do(x => x.gameObject.AddComponent<GenericAnimationExtraComponent>().sprites = anims);
 
 			yield break;
 		}
 
-		const int enumeratorReturnSize = 36;
+		const int enumeratorReturnSize = 37;
 
 
 		readonly AssetManager man = new();
 
-		internal static BepInEx.Logging.ManualLogSource logger;
+		public AssetManager AssetMan => man;
+
+		internal static ManualLogSource logger;
 
 
 		internal static string ModPath = string.Empty;
@@ -684,7 +701,7 @@ namespace BBPlusAnimations
 
 		public const string PLUGIN_NAME = "BB+ New Animations";
 
-		public const string PLUGIN_VERSION = "1.2.2";
+		public const string PLUGIN_VERSION = "1.2.3";
 	}
 
 

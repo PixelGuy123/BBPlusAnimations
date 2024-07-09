@@ -14,6 +14,8 @@ namespace BBPlusAnimations.Components
 
 		void Update()
 		{
+			if (ballsToDestroy.Count > 0)
+				Debug.Log($"Amount of balls: {ballsToDestroy.Count}");
 			for (int i = 0; i < ballsToDestroy.Count; i++)
 			{
 				if (!ballsToDestroy[i])
@@ -23,7 +25,10 @@ namespace BBPlusAnimations.Components
 				}
 
 				if (!ballsToDestroy[i].gameObject.activeSelf)
-					Destroy(ballsToDestroy[i--].gameObject);
+				{
+					Destroy(ballsToDestroy[i].gameObject);
+					ballsToDestroy.RemoveAt(i--);
+				}
 			}
 		}
 	}
