@@ -25,7 +25,9 @@ namespace BBPlusAnimations.Patches
 			if (!comp.isActive)
 			{
 				comp.isActive = true;
-				___pomp.StartCoroutine(SpotPlayerAnimation(___pomp, comp, ___pomp.sprite));
+				if (comp.runningAnimation != null)
+					___pomp.StopCoroutine(comp.runningAnimation);
+				comp.runningAnimation = ___pomp.StartCoroutine(SpotPlayerAnimation(___pomp, comp, ___pomp.sprite));
 			}
 		}
 
@@ -37,7 +39,9 @@ namespace BBPlusAnimations.Patches
 			if (comp.isActive) 
 			{
 				comp.isActive = false;
-				__instance.StartCoroutine(RevertEyesAnimation(__instance, comp, __instance.sprite));
+				if (comp.runningAnimation != null)
+					__instance.StopCoroutine(comp.runningAnimation);
+				comp.runningAnimation = __instance.StartCoroutine(RevertEyesAnimation(__instance, comp, __instance.sprite));
 			}
 		}
 
@@ -49,7 +53,9 @@ namespace BBPlusAnimations.Patches
 			if (comp.isActive)
 			{
 				comp.isActive = false;
-				___pomp.StartCoroutine(RevertEyesAnimation(___pomp, comp, ___pomp.sprite));
+				if (comp.runningAnimation != null)
+					___pomp.StopCoroutine(comp.runningAnimation);
+				comp.runningAnimation = ___pomp.StartCoroutine(RevertEyesAnimation(___pomp, comp, ___pomp.sprite));
 			}
 		}
 

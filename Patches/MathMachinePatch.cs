@@ -1,4 +1,5 @@
-﻿using HarmonyLib;
+﻿using BBPlusAnimations.Components;
+using HarmonyLib;
 using System.Collections;
 using TMPro;
 using UnityEngine;
@@ -34,6 +35,15 @@ namespace BBPlusAnimations.Patches
 
 			yield break;
 		}
+
+		[HarmonyPatch("Clicked", [typeof(int)])]
+		[HarmonyPrefix]
+		static void Prefix(bool[] ___playerIsHolding, int player)
+		{
+			if (___playerIsHolding[player])
+				Singleton<CoreGameManager>.Instance.GetCamera(player).GetComponent<CameraHandUI>().PlayAnimation(CameraHandUI.AnimType.Insert);
+		}
+		
 
 	}
 }

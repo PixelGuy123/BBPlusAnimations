@@ -10,5 +10,7 @@ namespace BBPlusAnimations.Components
 		public Sprite[] sprites = new Sprite[2];
 
 		public bool isActive = false;
+
+		public Coroutine runningAnimation;
 	}
 }
