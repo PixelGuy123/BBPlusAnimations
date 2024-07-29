@@ -11,7 +11,7 @@ namespace BBPlusAnimations.Patches
 	{
 		private static bool Prefix(Entity __instance, ref bool ___squished, ref float ___squishTime)
 		{
-			if (__instance.BaseHeight < __instance.Height)
+			if (__instance.BaseHeight < __instance.InternalHeight)
 			{
 				___squished = false;
 				___squishTime = 0f;
@@ -26,7 +26,7 @@ namespace BBPlusAnimations.Patches
 		{
 			float timer = 4f;
 			float factor = 0f;
-			float baseFactor = entity.BaseHeight / entity.Height;
+			float baseFactor = entity.BaseHeight / entity.InternalHeight;
 			float time = 0f;
 
 			while (timer > 0f)
