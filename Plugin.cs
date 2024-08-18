@@ -614,24 +614,6 @@ namespace BBPlusAnimations
 
 			GenericExtensions.FindResourceObjects<FogEvent>().Do(x => x.music.soundClip = fogSound); // Replace fog music
 
-			// Nana Peels slipping animation
-			yield return "Creating nana peel\'s slipping animation...";
-
-			var visual = AssetLoader.SpriteFromTexture2D(AssetLoader.TextureFromFile(Path.Combine(ModPath, "slippingWind.png")), 25f);
-			man.Add("nanaPeelSlide", visual);
-
-			GenericExtensions.FindResourceObjects<ITM_NanaPeel>().Do(x =>
-			{
-				var slip = ObjectCreationExtensions.CreateSpriteBillboard(visual, false);
-				var slipper = slip.gameObject.AddComponent<NanaPeelSlipper>();
-				slipper.renderer = slip;
-
-				slipper.transform.SetParent(x.transform);
-				slipper.transform.localPosition = Vector3.zero;
-
-				slipper.SetMyPeel(x);
-			});
-
 			yield return "Creating Dr Reflex\'s Hammer...";
 
 			var hammer = ObjectCreationExtensions.CreateSpriteBillboard(AssetLoader.SpriteFromTexture2D(AssetLoader.TextureFromFile(Path.Combine(ModPath, "reflexHammer.png")), 65f)).AddSpriteHolder(0f, 0);
@@ -760,7 +742,7 @@ namespace BBPlusAnimations
 			yield break;
 		}
 
-		const int enumeratorReturnSize = 42;
+		const int enumeratorReturnSize = 41;
 
 
 		readonly AssetManager man = new();

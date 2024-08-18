@@ -8,12 +8,18 @@ namespace BBPlusAnimations.Patches
 	internal class ITMBSODAPatch
 	{
 		[HarmonyPatch("Update")]
-		private static void Prefix(ref SpriteRenderer ___spriteRenderer, EnvironmentController ___ec)
+		private static void Prefix(ref SpriteRenderer ___spriteRenderer, EnvironmentController ___ec, float ___time)
 		{
 			var mat = new MaterialPropertyBlock();
 			___spriteRenderer.GetPropertyBlock(mat);
 			mat.SetFloat("_SpriteRotation", (mat.GetFloat("_SpriteRotation") + ___ec.EnvironmentTimeScale) % 360f);
 			___spriteRenderer.SetPropertyBlock(mat); // I hope this isn't expensive action
+			if (___time <= 5f)
+			{
+				Color co = ___spriteRenderer.color;
+				co.a = ___time * 0.2f; // 1 = 5f, 0 = 0f
+				___spriteRenderer.color = co;
+			}
 		}
 
 		[HarmonyPatch("Use")]
