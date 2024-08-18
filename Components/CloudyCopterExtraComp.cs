@@ -2,7 +2,7 @@
 
 namespace BBPlusAnimations.Components
 {
-	internal class CloudyCopterExtraComp : MonoBehaviour
+	public class CloudyCopterExtraComp : MonoBehaviour
 	{
 		[SerializeField]
 		public ParticleSystem compToHold;
