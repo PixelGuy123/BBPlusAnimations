@@ -25,7 +25,7 @@ namespace BBPlusAnimations
 
 	public class BasePlugin : BaseUnityPlugin
 	{
-		ConfigEntry<bool> enableHands;
+		ConfigEntry<bool> enableHands, enableBigOIBootsNoise;
 
 		private void Awake()
 		{
@@ -48,10 +48,14 @@ namespace BBPlusAnimations
 			LoadingEvents.RegisterOnAssetsLoaded(Info, OnAssetLoad(), false);
 
 			enableHands = Config.Bind("Animation Management", "Enable hand animations", true);
+			enableBigOIBootsNoise = Config.Bind("Animation Management", "Enable Big OI Boots step noises", true);
 		}
 
 		IEnumerator OnAssetLoad()
 		{
+			if (!(bool)enableBigOIBootsNoise.BoxedValue)
+				enumeratorReturnSize--;
+
 			yield return enumeratorReturnSize;
 
 			yield return "Grabbing material...";
@@ -469,18 +473,6 @@ namespace BBPlusAnimations
 
 			GenericExtensions.FindResourceObjects<Baldi>().Do(x => x.gameObject.AddComponent<BaldiEatAppleComponent>());
 
-			yield return "Replacing zesty bar\'s eating noise...";
-			// Zesty Bar audio change
-			//FieldInfo zestyBarAud = AccessTools.Field(typeof(ITM_ZestyBar), "audEat");
-			var zestyEatAudio = AssetLoader.AudioClipFromFile(Path.Combine(ModPath, "zesty_eating.wav"));
-			foreach (var zesty in GenericExtensions.FindResourceObjects<ITM_ZestyBar>())
-			{
-				var audio = zesty.audEat; //(SoundObject)zestyBarAud.GetValue(zesty);
-				audio.MarkAsNeverUnload();
-				audio.soundClip = zestyEatAudio;
-				//zestyBarAud.SetValue(zesty, audio); // << idk if I need this, but whatever
-			}
-
 			yield return "Loading Principal\'s whistle animation...";
 			// Principal's Whistle actually visible
 			var whistletex = AssetLoader.SpriteFromTexture2D(AssetLoader.TextureFromFile(Path.Combine(ModPath, "whistleScreen.png")), 1f);
@@ -494,20 +486,23 @@ namespace BBPlusAnimations
 				principalCanvas.transform.localPosition = Vector3.zero;
 			});
 
-			yield return "Loading Big Ol\' Boots noises...";
-			// Big ol' Boots footsteps
-			var step1 = ObjectCreators.CreateSoundObject(AssetLoader.AudioClipFromFile(Path.Combine(ModPath, "step0.wav")), string.Empty, SoundType.Effect, Color.white);
-			step1.subtitle = false;
-			var step2 = ObjectCreators.CreateSoundObject(AssetLoader.AudioClipFromFile(Path.Combine(ModPath, "step1.wav")), string.Empty, SoundType.Effect, Color.white);
-			step2.subtitle = false;
-
-			GenericExtensions.FindResourceObjects<ITM_Boots>().Do(x =>
+			if ((bool)enableBigOIBootsNoise.BoxedValue)
 			{
-				var comp = x.gameObject.AddComponent<BootsDistanceReach>();
-				comp.audFootstep = step1;
-				comp.audFootstep2 = step2;
-				comp.audMan = x.gameObject.CreateAudioManager(45f, 65f).MakeAudioManagerNonPositional();
-			});
+				yield return "Loading Big Ol\' Boots noises...";
+				// Big ol' Boots footsteps
+				var step1 = ObjectCreators.CreateSoundObject(AssetLoader.AudioClipFromFile(Path.Combine(ModPath, "step0.wav")), string.Empty, SoundType.Effect, Color.white);
+				step1.subtitle = false;
+				var step2 = ObjectCreators.CreateSoundObject(AssetLoader.AudioClipFromFile(Path.Combine(ModPath, "step1.wav")), string.Empty, SoundType.Effect, Color.white);
+				step2.subtitle = false;
+
+				GenericExtensions.FindResourceObjects<ITM_Boots>().Do(x =>
+				{
+					var comp = x.gameObject.AddComponent<BootsDistanceReach>();
+					comp.audFootstep = step1;
+					comp.audFootstep2 = step2;
+					comp.audMan = x.gameObject.CreateAudioManager(45f, 65f).MakeAudioManagerNonPositional();
+				});
+			}
 			// ITM_Bsodas already have a 0 scale as default lol
 			GenericExtensions.FindResourceObjects<ITM_BSODA>().Do(x => x.spriteRenderer.transform.localScale = Vector3.one * 0.1f);
 			yield return "Loading Principal\'s animation...";
@@ -742,7 +737,7 @@ namespace BBPlusAnimations
 			yield break;
 		}
 
-		const int enumeratorReturnSize = 41;
+		int enumeratorReturnSize = 40;
 
 
 		readonly AssetManager man = new();
