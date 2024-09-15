@@ -7,6 +7,7 @@ using UnityEngine;
 namespace BBPlusAnimations.Patches
 {
 	[HarmonyPatch(typeof(ITM_PrincipalWhistle), "Use")]
+	[AnimationConditionalPatch("Whistle unique appearance", "If True, the Principal Whistle will be displayed on screen once used.")]
 	internal class PrincipalWhistlePatch // Completely overwrites 
 	{
 		[HarmonyTranspiler]

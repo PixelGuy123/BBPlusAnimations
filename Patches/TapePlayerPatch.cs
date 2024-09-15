@@ -7,6 +7,7 @@ using UnityEngine;
 
 namespace BBPlusAnimations.Patches
 {
+	[AnimationConditionalPatch("Tape Player reverting state", "If True, the tape player will revert to its original form after doing the noise.")]
 	[HarmonyPatch(typeof(TapePlayer), "Cooldown", MethodType.Enumerator)]
 	internal class TapePlayerPatch
 	{

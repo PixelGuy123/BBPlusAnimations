@@ -7,6 +7,7 @@ using UnityEngine;
 
 namespace BBPlusAnimations.Patches
 {
+	[AnimationConditionalPatch("1st Prize smoke and wall hit", "If True, 1st Prize will emit smoke when cut and will show a particle of a broken wall when slamming into one.")]
 	[HarmonyPatch]
 	public class FirstPrizePatches
 	{

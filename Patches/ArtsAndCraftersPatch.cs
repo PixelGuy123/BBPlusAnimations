@@ -4,6 +4,7 @@ using UnityEngine;
 
 namespace BBPlusAnimations.Patches
 {
+	[AnimationConditionalPatch("Crafters visual anger", "If True, Crafters will have an unique animation when angry.")]
 	[HarmonyPatch(typeof(ArtsAndCrafters))]
 	internal class ArtsAndCraftersPatch
 	{

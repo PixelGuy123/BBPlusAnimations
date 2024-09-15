@@ -4,6 +4,7 @@ using PixelInternalAPI.Components;
 
 namespace BBPlusAnimations.Patches
 {
+	[AnimationConditionalPatch("Window shatter", "If True, windows will actually display broken pieces particles when they are broken.")]
 	[HarmonyPatch(typeof(Window), "Break", [typeof(bool)])]
 	internal class WindowPatch
 	{

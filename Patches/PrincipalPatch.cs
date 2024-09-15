@@ -6,6 +6,7 @@ using System.Collections;
 
 namespace BBPlusAnimations.Patches
 {
+	[AnimationConditionalPatch("Principal visual changes", "If True, Principal will display an animation for whistling and sending you to detention.")]
 	[HarmonyPatch(typeof(Principal))]
 	internal class PrincipalPatch
 	{

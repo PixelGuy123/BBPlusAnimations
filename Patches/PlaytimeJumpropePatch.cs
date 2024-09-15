@@ -6,6 +6,7 @@ using UnityEngine;
 namespace BBPlusAnimations.Patches
 {
 	[HarmonyPatch(typeof(Jumprope))]
+	[AnimationConditionalPatch("Jumprope cutting", "If True, Playtime jumprope will have a cutting animation.")]
 	internal class PlaytimeJumpropePatch
 	{
 		[HarmonyPatch("End")]

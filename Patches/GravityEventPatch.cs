@@ -5,6 +5,7 @@ using static UnityEngine.Object;
 namespace BBPlusAnimations.Patches
 {
 	[HarmonyPatch(typeof(GravityEvent), "DestroyFlipper")]
+	[AnimationConditionalPatch("Flipper explosion", "If True, gravity flippers will explode.")]
 	internal class GravityEventPatch
 	{
 		private static void Prefix(GravityFlipper flipper, ref EnvironmentController ___ec)

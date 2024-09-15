@@ -8,6 +8,7 @@ using BBPlusAnimations.Components;
 namespace BBPlusAnimations.Patches
 {
 	[HarmonyPatch(typeof(MathMachineNumber))]
+	[AnimationConditionalPatch("Numballs spawning and popping", "If True, numballs have an unique animation for spawning back and popping.")]
 	internal class NumberBalloonPatch
 	{
 		[HarmonyPatch("Start")]

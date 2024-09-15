@@ -5,6 +5,7 @@ using UnityEngine;
 namespace BBPlusAnimations.Patches
 {
 	[HarmonyPatch(typeof(Pickup), "Clicked", [typeof(int)])]
+	[AnimationConditionalPatch("Points unique pickup", "If True, Points will have an unique animation when being picked up.")]
 	internal class PickupPatches
 	{
 		static void Prefix(Pickup __instance, int player)

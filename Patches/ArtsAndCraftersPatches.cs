@@ -3,6 +3,7 @@ using UnityEngine;
 
 namespace BBPlusAnimations.Patches
 {
+	[AnimationConditionalPatch("Crafters visible jealously", "If True, Crafters will shake if he feels jealous for your notebooks.")]
 	[HarmonyPatch]
 	internal class ArtsAndCraftersPatches
 	{

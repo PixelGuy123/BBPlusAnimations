@@ -1,5 +1,4 @@
 ﻿using HarmonyLib;
-using PixelInternalAPI.Extensions;
 using System.Collections;
 using System.Collections.Generic;
 using System.Reflection.Emit;
@@ -9,6 +8,7 @@ using UnityEngine.UI;
 namespace BBPlusAnimations.Patches
 {
 	[HarmonyPatch(typeof(ITM_Nametag))]
+	[AnimationConditionalPatch("Nametag slide", "If True, nametags will slide from below to the screen and vice-versa.")]
 	internal class ITMNameTagPatch
 	{
 		[HarmonyPatch("Use")]

@@ -25,42 +25,39 @@ namespace BBPlusAnimations
 
 	public class BasePlugin : BaseUnityPlugin
 	{
-		ConfigEntry<bool> enableHands, enableBigOIBootsNoise;
+		ConfigEntry<bool> enableBsodaParticles, enablePortalPosterAnimation, enablePlantAnimation, enableCraftersAcceleration, enablePhoneChangeVisual;
+		internal static ConfigFile file;
+
+		internal static int enabledSettings = 40;
 
 		private void Awake()
 		{
+			file = Config;
 			logger = Logger;
-			try
-			{
-				Harmony h = new(ModInfo.PLUGIN_GUID);
-				h.PatchAll();
-			}
-			catch (System.Exception e)
-			{
-				Debug.LogException(e);
-				MTM101BaldiDevAPI.CauseCrash(Info, e);
-				return;
-			}
+
+			Harmony h = new(ModInfo.PLUGIN_GUID);
+			h.PatchAllConditionals();
 
 
 			ModPath = AssetLoader.GetModPath(this);
 
 			LoadingEvents.RegisterOnAssetsLoaded(Info, OnAssetLoad(), false);
 
-			enableHands = Config.Bind("Animation Management", "Enable hand animations", true);
-			enableBigOIBootsNoise = Config.Bind("Animation Management", "Enable Big OI Boots step noises", true);
+			enableBsodaParticles = Config.BindAndCheck("Animation Management", "Bsoda Particles", true, "If True, bsoda particles will be enabled for every bsoda instance in-game (a disabled/unfinished feature in base game).");
+			enablePortalPosterAnimation = Config.BindAndCheck("Animation Management", "Portal Poster Rotation", true, "If True, portal posters will always be seen rotating when placed in a wall.");
+			enablePlantAnimation = Config.BindAndCheck("Animation Management", "Plant animation", true, "If True, plants will display an unique particle and be interactable");
+			enableCraftersAcceleration = Config.BindAndCheck("Animation Management", "Crafters acceleration", true, "If True, Crafters acceleration will be increased when teleporting you.");
+			enablePhoneChangeVisual = Config.BindAndCheck("Animation Management", "Phone visual change", true, "If True, the phone will display as enabled when used.");
 		}
 
 		IEnumerator OnAssetLoad()
 		{
-			if (!(bool)enableBigOIBootsNoise.BoxedValue)
-				enumeratorReturnSize--;
-
-			yield return enumeratorReturnSize;
+			yield return 1 + enabledSettings;
 
 			yield return "Grabbing material...";
 			// Particle Material
 			man.Add("particleMaterial", ItemMetaStorage.Instance.FindByEnum(Items.ChalkEraser).value.item.GetComponent<ParticleSystemRenderer>().material);
+			TripEntrancePatch.baldiInBus = GenericExtensions.FindResourceObjectByName<Material>("Bus_Occupied");
 
 			yield return "Creating gum splash asset...";
 
@@ -84,14 +81,17 @@ namespace BBPlusAnimations
 
 			GumSplash.splash = ObjectCreators.CreateSoundObject(AssetLoader.AudioClipFromFile(Path.Combine(ModPath, "gumSplash.wav")), "Vfx_GumSplash", SoundType.Voice, new(1, 0.2039f, 0.8863f));
 
-			yield return "Enabling bsoda particles...";
 			// Bsoda particles
-			GenericExtensions.FindResourceObjects<ITM_BSODA>().Do((x) =>
+			if (enableBsodaParticles.Value)
 			{
-				var r = x.transform.Find("RendereBase").Find("Particles"); // Yes, Rendere. I didn't mistyped
-				r.gameObject.SetActive(true);
-				r.transform.localPosition = Vector3.zero; // maybe this is the issue?
-			});
+				yield return "Enabling bsoda particles...";
+				GenericExtensions.FindResourceObjects<ITM_BSODA>().Do((x) =>
+				{
+					var r = x.transform.Find("RendereBase").Find("Particles"); // Yes, Rendere. I didn't mistyped
+					r.gameObject.SetActive(true);
+					r.transform.localPosition = Vector3.zero; // maybe this is the issue?
+				});
+			}
 			yield return "Adding door locks for doors...";
 			Texture2D[] texs = TextureExtensions.LoadTextureSheet(2, 1, ModPath, "doorLocksSheet.png");
 			// Door
@@ -155,81 +155,86 @@ namespace BBPlusAnimations
 			GenericExtensions.FindResourceObjects<Cumulo>().DoIf(x => !x.GetComponent<PropagatedAudioManager>(), x => x.gameObject.CreatePropagatedAudioManager(45, 75));
 			CumuloPatch.blowBeforeBlowing = ObjectCreators.CreateSoundObject(AssetLoader.AudioClipFromFile(Path.Combine(ModPath, "CC_Blow.wav")), "Vfx_CC_Breath", SoundType.Voice, Color.white);
 			CumuloPatch.pah = ObjectCreators.CreateSoundObject(AssetLoader.AudioClipFromFile(Path.Combine(ModPath, "CC_PAH.wav")), "Vfx_CC_PAH", SoundType.Voice, Color.white);
-
-			yield return "Loading portal poster\'s animation...";
-			// Portal Posters
-			var portalPoster = GenericExtensions.FindResourceObjectByName<WindowObject>("PortalPosterWindow");
-			var portal = portalPoster.windowPre.gameObject.AddComponent<TextureAnimator>(); // Texture animator setup
-			portal.texs = [portalPoster.windowPre.windows[0].materials[1].mainTexture, .. TextureExtensions.LoadTextureSheet(3, 3, ModPath, "portalPosterSpriteSheet.png")];
-			portal.renderers = portalPoster.windowPre.windows;
-			portal.defaultIndex = 1;
-			portal.speed = 20f;
-
-			yield return "Loading plant particles...";
-			// Plant Particles
-			Sprite[] plantSprites = [null, .. TextureExtensions.LoadSpriteSheet(5, 1, 15f, new Vector2(0.5f, 0f), ModPath, "plantSheet.png")];
-			var mat = new Material(man.Get<Material>("particleMaterial"))
+			if (enablePortalPosterAnimation.Value)
 			{
-				mainTexture = AssetLoader.TextureFromFile(Path.Combine(ModPath, "leaves.png"))
-			};
-
-			GenericExtensions.FindResourceObjects<RendererContainer>().DoIf(x => x.name.StartsWith("Plant"), (x) =>
+				yield return "Loading portal poster\'s animation...";
+				// Portal Posters
+				var portalPoster = GenericExtensions.FindResourceObjectByName<WindowObject>("PortalPosterWindow");
+				var portal = portalPoster.windowPre.gameObject.AddComponent<TextureAnimator>(); // Texture animator setup
+				portal.texs = [portalPoster.windowPre.windows[0].materials[1].mainTexture, .. TextureExtensions.LoadTextureSheet(3, 3, ModPath, "portalPosterSpriteSheet.png")];
+				portal.renderers = portalPoster.windowPre.windows;
+				portal.defaultIndex = 1;
+				portal.speed = 20f;
+			}
+			Material mat;
+			if (enablePlantAnimation.Value)
 			{
-				ParticleSystem[] pars = new ParticleSystem[3];
-
-				for (int i = 0; i < pars.Length; i++)
+				yield return "Loading plant particles...";
+				// Plant Particles
+				Sprite[] plantSprites = [null, .. TextureExtensions.LoadSpriteSheet(5, 1, 15f, new Vector2(0.5f, 0f), ModPath, "plantSheet.png")];
+				mat = new Material(man.Get<Material>("particleMaterial"))
 				{
-					var particle = new GameObject("leaves").AddComponent<ParticleSystem>();
-					particle.transform.SetParent(x.renderers[0].transform);
-					particle.transform.localPosition = Vector3.up * (i + 2);
-					particle.transform.rotation = Quaternion.Euler(90f, 0f, 0f);
-					var main = particle.main;
-					main.gravityModifierMultiplier = 0.03f;
-					main.startLifetimeMultiplier = 10f;
+					mainTexture = AssetLoader.TextureFromFile(Path.Combine(ModPath, "leaves.png"))
+				};
 
-					var vel = particle.velocityOverLifetime;
-					vel.enabled = true;
-					vel.zMultiplier = -4f;
+				GenericExtensions.FindResourceObjects<RendererContainer>().DoIf(x => x.name.StartsWith("Plant"), (x) =>
+				{
+					ParticleSystem[] pars = new ParticleSystem[3];
+
+					for (int i = 0; i < pars.Length; i++)
+					{
+						var particle = new GameObject("leaves").AddComponent<ParticleSystem>();
+						particle.transform.SetParent(x.renderers[0].transform);
+						particle.transform.localPosition = Vector3.up * (i + 2);
+						particle.transform.rotation = Quaternion.Euler(90f, 0f, 0f);
+						var main = particle.main;
+						main.gravityModifierMultiplier = 0.03f;
+						main.startLifetimeMultiplier = 10f;
+
+						var vel = particle.velocityOverLifetime;
+						vel.enabled = true;
+						vel.zMultiplier = -4f;
 
 
-					var renderer = particle.GetComponent<ParticleSystemRenderer>();
-					renderer.material = mat;
+						var renderer = particle.GetComponent<ParticleSystemRenderer>();
+						renderer.material = mat;
 
 
-					var anim = particle.textureSheetAnimation;
-					anim.enabled = true;
-					anim.frameOverTimeMultiplier = 0.0001f;
-					anim.numTilesX = 4;
-					anim.numTilesY = 1;
-					anim.animation = ParticleSystemAnimationType.SingleRow;
-					anim.mode = ParticleSystemAnimationMode.Grid;
-					anim.cycleCount = int.MaxValue; // Bruh
+						var anim = particle.textureSheetAnimation;
+						anim.enabled = true;
+						anim.frameOverTimeMultiplier = 0.0001f;
+						anim.numTilesX = 4;
+						anim.numTilesY = 1;
+						anim.animation = ParticleSystemAnimationType.SingleRow;
+						anim.mode = ParticleSystemAnimationMode.Grid;
+						anim.cycleCount = int.MaxValue; // Bruh
 
-					var co = particle.collision;
-					co.enabled = true;
-					co.type = ParticleSystemCollisionType.World;
-					co.collidesWith = LayerStorage.windowLayer | 1;
-					co.bounceMultiplier = 0f;
-					co.lifetimeLossMultiplier = 0f;
+						var co = particle.collision;
+						co.enabled = true;
+						co.type = ParticleSystemCollisionType.World;
+						co.collidesWith = LayerStorage.windowLayer | 1;
+						co.bounceMultiplier = 0f;
+						co.lifetimeLossMultiplier = 0f;
 
-					pars[i] = particle;
-				}
+						pars[i] = particle;
+					}
 
-				var col = new GameObject("PlantCollider").AddComponent<CapsuleCollider>(); // I hate the plant having 2 prefabs >:(
-				col.transform.SetParent(x.renderers[0].transform);
-				col.transform.localPosition = Vector3.up * 5f;
-				col.isTrigger = true;
-				col.radius = 2f;
+					var col = new GameObject("PlantCollider").AddComponent<CapsuleCollider>(); // I hate the plant having 2 prefabs >:(
+					col.transform.SetParent(x.renderers[0].transform);
+					col.transform.localPosition = Vector3.up * 5f;
+					col.isTrigger = true;
+					col.radius = 2f;
 
-				var animator = col.gameObject.AddComponent<PlantAnimator>();
-				animator.particles = pars;
-				animator.audMan = animator.gameObject.CreatePropagatedAudioManager(30f, 45f);
-				animator.aud_bushes = ObjectCreators.CreateSoundObject(AssetLoader.AudioClipFromFile(Path.Combine(ModPath, "bushes.wav")), "Vfx_plantNoise", SoundType.Voice, Color.white);
-				animator.renderer = (SpriteRenderer)x.renderers[0];
-				animator.sprites = plantSprites;
-				animator.sprites[0] = animator.renderer.sprite;
+					var animator = col.gameObject.AddComponent<PlantAnimator>();
+					animator.particles = pars;
+					animator.audMan = animator.gameObject.CreatePropagatedAudioManager(30f, 45f);
+					animator.aud_bushes = ObjectCreators.CreateSoundObject(AssetLoader.AudioClipFromFile(Path.Combine(ModPath, "bushes.wav")), "Vfx_plantNoise", SoundType.Voice, Color.white);
+					animator.renderer = (SpriteRenderer)x.renderers[0];
+					animator.sprites = plantSprites;
+					animator.sprites[0] = animator.renderer.sprite;
 
-			});
+				});
+			}
 
 			yield return "Loading flipper\'s particles...";
 			// Flipper Particle
@@ -278,22 +283,22 @@ namespace BBPlusAnimations
 
 			// Tape Player revert state
 
-			//FieldInfo tapePlayer_spriteToChange = AccessTools.Field(typeof(TapePlayer), "spriteToChange");
-			//FieldInfo tapePlayer_changeOnUse = AccessTools.Field(typeof(TapePlayer), "changeOnUse");
-			//FieldInfo tapePlayer_usedSprite = AccessTools.Field(typeof(TapePlayer), "usedSprite");
 
 			// The editor somehow breaks Resources
-			yield return "Loading the pay phone\'s sprite...";
-			GenericExtensions.FindResourceObjects<TapePlayer>().Do(x =>
+			if (enablePhoneChangeVisual.Value)
 			{
-				if (x.name == "PayPhone") // everything was null, wow
+				yield return "Loading the pay phone\'s sprite...";
+				GenericExtensions.FindResourceObjects<TapePlayer>().Do(x =>
 				{
-					x.spriteToChange = x.GetComponentInChildren<SpriteRenderer>(); //tapePlayer_spriteToChange.SetValue(x, x.GetComponentInChildren<SpriteRenderer>());
-					x.changeOnUse = true; //tapePlayer_changeOnUse.SetValue(x, true);
-					x.usedSprite = AssetLoader.SpriteFromTexture2D(AssetLoader.TextureFromFile(Path.Combine(ModPath, "phoneActive.png")), 25f); //tapePlayer_usedSprite.SetValue(x, AssetLoader.SpriteFromTexture2D(AssetLoader.TextureFromFile(Path.Combine(ModPath, "phoneActive.png")), 25f)); // No need to store in a variable, there's just one payphone
-				}
-				x.gameObject.AddComponent<TapePlayerReverser>().spriteToReverse = x.spriteToChange.sprite; //((SpriteRenderer)tapePlayer_spriteToChange.GetValue(x)).sprite;
-			});
+					if (x.name == "PayPhone") // everything was null, wow
+					{
+						x.spriteToChange = x.GetComponentInChildren<SpriteRenderer>(); //tapePlayer_spriteToChange.SetValue(x, x.GetComponentInChildren<SpriteRenderer>());
+						x.changeOnUse = true; //tapePlayer_changeOnUse.SetValue(x, true);
+						x.usedSprite = AssetLoader.SpriteFromTexture2D(AssetLoader.TextureFromFile(Path.Combine(ModPath, "phoneActive.png")), 25f); //tapePlayer_usedSprite.SetValue(x, AssetLoader.SpriteFromTexture2D(AssetLoader.TextureFromFile(Path.Combine(ModPath, "phoneActive.png")), 25f)); // No need to store in a variable, there's just one payphone
+					}
+					x.gameObject.AddComponent<TapePlayerReverser>().spriteToReverse = x.spriteToChange.sprite; //((SpriteRenderer)tapePlayer_spriteToChange.GetValue(x)).sprite;
+				});
+			}
 
 			// Baldi Ruler Break Particles
 			yield return "Loading Baldi\'s ruler particles...";
@@ -335,8 +340,11 @@ namespace BBPlusAnimations
 
 			// Arts and Crafters speed increase
 			//FieldInfo attackSpeed = AccessTools.Field(typeof(ArtsAndCrafters), "attackSpinAccel");
-			yield return "Setting Arts and Crafters spin acceleration...";
-			GenericExtensions.FindResourceObjects<ArtsAndCrafters>().Do(x => x.attackSpinAccel = 80f); //attackSpeed.SetValue(x, 80f));
+			if (enableCraftersAcceleration.Value)
+			{
+				yield return "Setting Arts and Crafters spin acceleration...";
+				GenericExtensions.FindResourceObjects<ArtsAndCrafters>().Do(x => x.attackSpinAccel = 200f); //attackSpeed.SetValue(x, 80f));
+			}
 
 			yield return "Loading water fountain\'s water...";
 			// Water fountain water
@@ -431,7 +439,7 @@ namespace BBPlusAnimations
 
 			yield return "Loading Mrs Pomp looking animation...";
 			// Mrs Pomp looking at ya
-			GenericExtensions.FindResourceObjects<NoLateTeacher>().Do(x => 
+			GenericExtensions.FindResourceObjects<NoLateTeacher>().Do(x =>
 			x.gameObject.AddComponent<GenericAnimationExtraComponent>().sprites = [x.normalSprite, .. TextureExtensions.LoadSpriteSheet(3, 1, x.normalSprite.pixelsPerUnit, ModPath, "pompLook.png")]);
 
 			yield return "Loading playtime\'s happy face animation...";
@@ -486,25 +494,22 @@ namespace BBPlusAnimations
 				principalCanvas.transform.localPosition = Vector3.zero;
 			});
 
-			if ((bool)enableBigOIBootsNoise.BoxedValue)
-			{
-				yield return "Loading Big Ol\' Boots noises...";
-				// Big ol' Boots footsteps
-				var step1 = ObjectCreators.CreateSoundObject(AssetLoader.AudioClipFromFile(Path.Combine(ModPath, "step0.wav")), string.Empty, SoundType.Effect, Color.white);
-				step1.subtitle = false;
-				var step2 = ObjectCreators.CreateSoundObject(AssetLoader.AudioClipFromFile(Path.Combine(ModPath, "step1.wav")), string.Empty, SoundType.Effect, Color.white);
-				step2.subtitle = false;
 
-				GenericExtensions.FindResourceObjects<ITM_Boots>().Do(x =>
-				{
-					var comp = x.gameObject.AddComponent<BootsDistanceReach>();
-					comp.audFootstep = step1;
-					comp.audFootstep2 = step2;
-					comp.audMan = x.gameObject.CreateAudioManager(45f, 65f).MakeAudioManagerNonPositional();
-				});
-			}
-			// ITM_Bsodas already have a 0 scale as default lol
-			GenericExtensions.FindResourceObjects<ITM_BSODA>().Do(x => x.spriteRenderer.transform.localScale = Vector3.one * 0.1f);
+			yield return "Loading Big Ol\' Boots noises...";
+			// Big ol' Boots footsteps
+			var step1 = ObjectCreators.CreateSoundObject(AssetLoader.AudioClipFromFile(Path.Combine(ModPath, "step0.wav")), string.Empty, SoundType.Effect, Color.white);
+			step1.subtitle = false;
+			var step2 = ObjectCreators.CreateSoundObject(AssetLoader.AudioClipFromFile(Path.Combine(ModPath, "step1.wav")), string.Empty, SoundType.Effect, Color.white);
+			step2.subtitle = false;
+
+			GenericExtensions.FindResourceObjects<ITM_Boots>().Do(x =>
+			{
+				var comp = x.gameObject.AddComponent<BootsDistanceReach>();
+				comp.audFootstep = step1;
+				comp.audFootstep2 = step2;
+				comp.audMan = x.gameObject.CreateAudioManager(45f, 65f).MakeAudioManagerNonPositional();
+			});
+
 			yield return "Loading Principal\'s animation...";
 			// principal detention animation
 			var spr = GenericExtensions.FindResourceObject<Principal>().spriteRenderer[0].sprite;
@@ -603,12 +608,6 @@ namespace BBPlusAnimations
 			yield return "Loading WOOOOOOW...";
 			MathMachinePatch.aud_BalWow = ObjectCreators.CreateSoundObject(AssetLoader.AudioClipFromFile(Path.Combine(ModPath, "Animation_BAL_Wow.wav")), "Vfx_Bal_WOW", SoundType.Voice, Color.green);
 
-			// Fog music change
-			yield return "Changing the fog song...";
-			var fogSound = AssetLoader.AudioClipFromFile(Path.Combine(ModPath, "newFog_CreepyOldComputer.wav"));
-
-			GenericExtensions.FindResourceObjects<FogEvent>().Do(x => x.music.soundClip = fogSound); // Replace fog music
-
 			yield return "Creating Dr Reflex\'s Hammer...";
 
 			var hammer = ObjectCreationExtensions.CreateSpriteBillboard(AssetLoader.SpriteFromTexture2D(AssetLoader.TextureFromFile(Path.Combine(ModPath, "reflexHammer.png")), 65f)).AddSpriteHolder(0f, 0);
@@ -672,9 +671,8 @@ namespace BBPlusAnimations
 			yield return "Creating hand animations...";
 
 			Sprite[][] handSprs = null;
-			if (enableHands.Value)
-				handSprs = [[.. TextureExtensions.LoadSpriteSheet(13, 1, 1f, ModPath, "handInsert.png")], [.. TextureExtensions.LoadSpriteSheet(11, 1, 1f, ModPath, "pickupHand.png")]];
-			
+			handSprs = [[.. TextureExtensions.LoadSpriteSheet(13, 1, 1f, ModPath, "handInsert.png")], [.. TextureExtensions.LoadSpriteSheet(11, 1, 1f, ModPath, "pickupHand.png")]];
+
 
 			GenericExtensions.FindResourceObjects<GameCamera>().Do(x =>
 			{
@@ -688,13 +686,12 @@ namespace BBPlusAnimations
 				handImg.transform.localPosition = new(-319.76f, 178.83f);
 
 				var comp = x.gameObject.AddComponent<CameraHandUI>();
-				if (enableHands.Value)
-				{
-					comp.canvas = handCanvas;
-					comp.img = handImg;
-					comp.sprsInsert = handSprs[0];
-					comp.sprsPickup = handSprs[1];
-				}
+
+				comp.canvas = handCanvas;
+				comp.img = handImg;
+				comp.sprsInsert = handSprs[0];
+				comp.sprsPickup = handSprs[1];
+
 			});
 
 			yield return "Creating cloudy copter\'s wind particles...";
@@ -732,12 +729,10 @@ namespace BBPlusAnimations
 				flipperParticle.transform.localPosition = Vector3.down * 10f;
 			});
 
-			
+
 
 			yield break;
 		}
-
-		int enumeratorReturnSize = 40;
 
 
 		readonly AssetManager man = new();
@@ -756,7 +751,25 @@ namespace BBPlusAnimations
 
 		public const string PLUGIN_NAME = "BB+ New Animations";
 
-		public const string PLUGIN_VERSION = "1.2.3.2";
+		public const string PLUGIN_VERSION = "1.2.4";
+	}
+
+	internal static class ConfigExtensions
+	{
+		public static ConfigEntry<bool> BindAndCheck(this ConfigFile file, string section, string key, bool defaultValue, string description)
+		{
+			var co = file.Bind(section, key, defaultValue, description);
+			if (!co.Value)
+				BasePlugin.enabledSettings--;
+			return co;
+		}
+		public static ConfigEntry<bool> BindAndCheck(this ConfigFile file, string section, string key, bool defaultValue)
+		{
+			var co = file.Bind(section, key, defaultValue);
+			if (!co.Value)
+				BasePlugin.enabledSettings--;
+			return co;
+		}
 	}
 
 

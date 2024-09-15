@@ -7,6 +7,7 @@ using System.Collections;
 namespace BBPlusAnimations.Patches
 {
 	[HarmonyPatch(typeof(Bully))]
+	[AnimationConditionalPatch("Bully gradual disappearance", "If True, Bully will fade out each time he wants to.")]
 	internal class BullyPatch
 	{
 		internal static Vector3 GetPos(float degrees)

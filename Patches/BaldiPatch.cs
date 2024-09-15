@@ -5,6 +5,7 @@ using UnityEngine;
 
 namespace BBPlusAnimations.Patches
 {
+	[AnimationConditionalPatch("Baldi visible particles", "If True, Baldi will display particles for breaking the ruler and eating an apple.")]
 	[HarmonyPatch]
 	internal class BaldiPatch
 	{

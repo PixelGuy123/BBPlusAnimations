@@ -1,57 +1,84 @@
 ﻿using HarmonyLib;
 using System.Collections;
+using System.Collections.Generic;
 using UnityEngine;
+using System.Reflection.Emit;
+using PixelInternalAPI.Extensions;
 
 namespace BBPlusAnimations.Patches
 {
-	//[HarmonyPatch(typeof(TripEntrance))]
-	//internal class TripEntrancePatch
-	//{
-	//	[HarmonyPatch("OnTriggerEnter")]
-	//	[HarmonyPrefix]
-	//	private static void BeforeTriggerForCheck(out bool __state, bool ___entered) =>
-	//		__state = ___entered;
+	[AnimationConditionalPatch("Bus go away", "If True, once you leave the field trip winning, the bus goes away by itself.")]
+	[HarmonyPatch(typeof(FieldTripEntranceRoomFunction))]
+	internal class TripEntrancePatch
+	{
+		[HarmonyPatch("OnPlayerEnter")]
+		[HarmonyTranspiler]
+		static IEnumerable<CodeInstruction> RemoveIf(IEnumerable<CodeInstruction> i)
+		{
+			var m = new CodeMatcher(i)
+			.End()
+			.MatchBack(false,
+				new(OpCodes.Call, AccessTools.PropertyGetter(typeof(Singleton<CoreGameManager>), "Instance")),
+				new(CodeInstruction.LoadField(typeof(CoreGameManager), "tripPlayed"))
+				);
+			for (int x = 0; x < 8; x++)
+				m.SetAndAdvance(OpCodes.Nop, null); // Nops because removing instructions fks up the Jumpers before this snippet
+			return m.InstructionEnumeration();
+		}
 
 
-	//	[HarmonyPatch("OnTriggerEnter")]
-	//	[HarmonyPostfix]
-	//	private static void TriggerEnterEffect(TripEntrance __instance, EnvironmentController ___ec, bool __state, bool ___entered)
-	//	{
-	//		if (__state == ___entered) return;
 
-	//		__instance.StartCoroutine(BusGoAway(__instance.transform.Find("Door_Swinging").Find("Bus"), ___ec));
-	//		__instance.StartCoroutine(BusGoAway(__instance.transform.Find("Door_Swinging").Find("Bus_1"), ___ec));
-	//	}
+		[HarmonyPatch("OnPlayerEnter")]
+		[HarmonyPostfix]
+		static void AddMyOwnBusLeave(FieldTripEntranceRoomFunction __instance, Transform ___busObjects)
+		{
+			if (Singleton<CoreGameManager>.Instance.tripPlayed)
+			{
+				Transform bus = null;
+				foreach (var child in ___busObjects.AllChilds())
+				{
+					if (child.name != "Bus")
+						child.gameObject.SetActive(false);
+					else if (!bus)
+						bus = child;
+				}
 
-	//	static IEnumerator BusGoAway(Transform bus, EnvironmentController ec)
-	//	{
-	//		yield return null;
+				if (bus)
+				{
+					bus.GetComponentsInChildren<MeshRenderer>().Do(x => x.material = baldiInBus);
+					__instance.StartCoroutine(BusGoAway(bus, bus.GetComponentInChildren<PropagatedAudioManager>(), __instance.Room.ec));
+				}
+			}
+		}
 
-	//		while (Time.timeScale <= 0f) yield return null;
+		internal static Material baldiInBus;
 
-	//		float speed = 0f;
-	//		float timeSpeed = 0f;
-	//		while (timeSpeed < 8f)
-	//		{
-	//			speed += timeSpeed;
-	//			timeSpeed += speedIncrease * ec.EnvironmentTimeScale * Time.deltaTime;
-	//			bus.transform.position += bus.right * speed;
-	//			yield return null;
-	//		}
+		static IEnumerator BusGoAway(Transform bus, PropagatedAudioManager audMan, EnvironmentController ec)
+		{
+			yield return null;
 
-	//		bus.gameObject.SetActive(false);
+			while (Time.timeScale <= 0f) yield return null;
 
-	//		yield break;
-	//	}
+			float speed = 0f;
+			float timeSpeed = 0f;
+			while (timeSpeed < 6f)
+			{
+				audMan.volumeMultiplier += timeSpeed * 0.0005f;
+				audMan.pitchModifier += timeSpeed * 0.002f;
+				if (ec.CellFromPosition(bus.transform.position).Null)
+					audMan.enabled = false; // To avoid exceptions
 
-	//	[HarmonyPatch("Start")]
-	//	[HarmonyPostfix]
-	//	static void RemoveBusIfNeeded(TripEntrance __instance, bool ___entered)
-	//	{
-	//		__instance.transform.Find("Door_Swinging").Find("Bus").gameObject.SetActive(!___entered);
-	//		__instance.transform.Find("Door_Swinging").Find("Bus_1").gameObject.SetActive(!___entered);
-	//	}
+				speed += timeSpeed;
+				timeSpeed += speedIncrease * ec.EnvironmentTimeScale * Time.deltaTime;
+				bus.transform.position += bus.right * speed;
+				yield return null;
+			}
 
-	//	const float speedIncrease = 0.002f;
-	//}
+			bus.gameObject.SetActive(false);
+
+			yield break;
+		}
+
+		const float speedIncrease = 0.00005f;
+	}
 }

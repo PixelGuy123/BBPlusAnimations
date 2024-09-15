@@ -5,6 +5,7 @@ using UnityEngine;
 namespace BBPlusAnimations.Patches
 {
 	[HarmonyPatch]
+	[AnimationConditionalPatch("Playtime hapiness", "If True, Playtime will display an unique animation when completing her minigame.")]
 	internal class PlaytimePatches
 	{
 

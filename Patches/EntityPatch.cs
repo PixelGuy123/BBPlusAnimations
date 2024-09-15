@@ -6,6 +6,7 @@ using UnityEngine;
 
 namespace BBPlusAnimations.Patches
 {
+	[AnimationConditionalPatch("Entity unsquish animation", "If True, entities (npcs and player) will have an animation to indicate when they are unsquishing.")]
 	[HarmonyPatch(typeof(Entity), "Unsquish")]
 	internal class EntityPatch
 	{

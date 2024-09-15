@@ -6,6 +6,7 @@ using BBPlusAnimations.Components;
 
 namespace BBPlusAnimations.Patches
 {
+	[AnimationConditionalPatch("Boots walking noises", "If True, Big OI Boots will do squeaking noises.")]
 	[HarmonyPatch(typeof(ITM_Boots), "Timer", MethodType.Enumerator)]
 	internal class ITMBootsPatch
 	{

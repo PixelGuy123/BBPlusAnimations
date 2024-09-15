@@ -5,6 +5,7 @@ using System.Reflection.Emit;
 
 namespace BBPlusAnimations.Patches
 {
+	[AnimationConditionalPatch("Dr Reflex hammer", "If True, Dr Reflex will spawn with a physic hammer in his position.")]
 	[HarmonyPatch(typeof(DrReflex))]
 	internal class DrReflexPatch
 	{

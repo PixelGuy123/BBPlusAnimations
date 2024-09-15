@@ -5,6 +5,7 @@ using UnityEngine;
 namespace BBPlusAnimations.Patches
 {
 	[HarmonyPatch(typeof(ITM_ZestyBar), "Use")]
+	[AnimationConditionalPatch("Zesty Bar displaying pieces", "If True, Zesty bars will display pieces when eaten.")]
 	internal class ITMZestyBar
 	{
 		static void Prefix(PlayerManager pm)

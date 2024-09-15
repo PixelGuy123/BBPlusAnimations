@@ -10,6 +10,7 @@ using UnityEngine.UI;
 namespace BBPlusAnimations.Patches
 {
 	[HarmonyPatch(typeof(Gum))]
+	[AnimationConditionalPatch("Gum splash", "If True, Beans gum will literally splash when hitting a wall.")]
 	public class GumSplash
 	{
 		[HarmonyPatch("OnEntityMoveCollision")]

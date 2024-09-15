@@ -6,6 +6,7 @@ using PixelInternalAPI.Extensions;
 namespace BBPlusAnimations.Patches
 {
 	[HarmonyPatch(typeof(ITM_GrapplingHook))]
+	[AnimationConditionalPatch("Grappling hook fov changer", "If True, Grappling hooks will manipulate the player fov and fade out when despawning.")]
 	internal class GrapplingHookAnimation
 	{
 

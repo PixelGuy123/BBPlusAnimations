@@ -5,6 +5,7 @@ using UnityEngine;
 namespace BBPlusAnimations.Patches
 {
 	[HarmonyPatch(typeof(GottaSweep))]
+	[AnimationConditionalPatch("Gotta sweep sweeping", "If True, Gotta Sweep will display an unique *sweeping* animation.")]
 	internal class GottaSweepPatches
 	{
 		[HarmonyPatch("StartSweeping")]

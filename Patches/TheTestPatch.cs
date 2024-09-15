@@ -9,6 +9,7 @@ using UnityEngine.UI;
 namespace BBPlusAnimations.Patches
 {
 	[HarmonyPatch(typeof(LookAtGuy_Active), "OnStateTriggerEnter")]
+	[AnimationConditionalPatch("The Test hands display", "If True, The Test will display an unique animation when catching you.")]
 	internal class TheTestPatch // Literally an animation for the test blinding player
 	{
 		private static IEnumerable<CodeInstruction> Transpiler(IEnumerable<CodeInstruction> insts) =>

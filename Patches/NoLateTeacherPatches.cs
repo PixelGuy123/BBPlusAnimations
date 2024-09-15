@@ -8,6 +8,7 @@ using UnityEngine;
 namespace BBPlusAnimations.Patches
 {
 	[HarmonyPatch]
+	[AnimationConditionalPatch("Mrs Pomp unique look", "If True, Mrs Pomp will stare directly at you when reaching you and change your fov when screaming.")]
 	internal class NoLateTeacherPatches
 	{
 		[HarmonyPatch(typeof(NoLateTeacher), "Attack")]

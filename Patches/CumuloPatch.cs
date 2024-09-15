@@ -5,6 +5,7 @@ using UnityEngine;
 
 namespace BBPlusAnimations.Patches
 {
+	[AnimationConditionalPatch("Cloudy Copter blow animation", "If True, Cloudy Copter will have an unique animation for blowing in and out.")]
 	[HarmonyPatch(typeof(Cumulo))]
 	internal class CumuloPatch
 	{

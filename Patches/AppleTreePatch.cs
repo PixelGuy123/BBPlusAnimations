@@ -3,8 +3,10 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Reflection.Emit;
 using UnityEngine;
+
 namespace BBPlusAnimations.Patches
 {
+	[AnimationConditionalPatch("Apple tree drop", "If True, each time a tree is forced to drop an item, it will drop in a linear slide.")]
 	[HarmonyPatch(typeof(AppleTree), "OnTriggerEnter")]
 	internal class AppleTreePatch
 	{

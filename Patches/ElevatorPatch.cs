@@ -4,6 +4,7 @@ using UnityEngine;
 
 namespace BBPlusAnimations.Patches
 {
+	[AnimationConditionalPatch("Elevator gate hit", "If True, the elevator gate will bounce a bit up after hitting.")]
 	[HarmonyPatch(typeof(Elevator), "Close")]
 	internal class ElevatorPatch
 	{

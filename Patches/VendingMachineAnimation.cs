@@ -5,6 +5,7 @@ using UnityEngine;
 namespace BBPlusAnimations.Patches
 {
 	[HarmonyPatch]
+	[AnimationConditionalPatch("Interactables actually interacting", "If True, some interactables will indicate when they are used.")]
 	public class GenericAnimation
 	{
 		[HarmonyPatch(typeof(SodaMachine), "InsertItem")]

@@ -6,6 +6,7 @@ using System.Reflection.Emit;
 
 namespace BBPlusAnimations.Patches
 {
+	[AnimationConditionalPatch("Enable hand animation", "If True, hands will be displayed on screen when performing certain interactions.")]
 	[HarmonyPatch]
 	internal class InsertItemPatches
 	{

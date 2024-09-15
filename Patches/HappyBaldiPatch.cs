@@ -6,6 +6,7 @@ using UnityEngine;
 
 namespace BBPlusAnimations.Patches
 {
+	[AnimationConditionalPatch("Baldi says bye", "If True, in Explorer Mode, Baldi has an unique way of leaving the player behind.")]
 	[HarmonyPatch(typeof(HappyBaldi), "SpawnWait", MethodType.Enumerator)]
 	internal class HappyBaldiPatch
 	{

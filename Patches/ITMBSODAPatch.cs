@@ -5,6 +5,7 @@ using UnityEngine;
 namespace BBPlusAnimations.Patches
 {
 	[HarmonyPatch(typeof(ITM_BSODA))]
+	[AnimationConditionalPatch("Bsoda rotation and grown", "If True, each bsoda instance will spawn growing to their normal scale while also rotating.")]
 	internal class ITMBSODAPatch
 	{
 		[HarmonyPatch("Update")]
