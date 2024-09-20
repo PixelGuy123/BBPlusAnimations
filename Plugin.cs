@@ -20,6 +20,7 @@ namespace BBPlusAnimations
 	[BepInPlugin(ModInfo.PLUGIN_GUID, ModInfo.PLUGIN_NAME, ModInfo.PLUGIN_VERSION)]
 	[BepInDependency("pixelguy.pixelmodding.baldiplus.pixelinternalapi")]
 	[BepInDependency("mtm101.rulerp.bbplus.baldidevapi")]
+	[BepInDependency("mtm101.rulerp.baldiplus.texturepacks", BepInDependency.DependencyFlags.SoftDependency)] // To make sure it loads after texture pack. Should fix most of the issues
 
 
 
