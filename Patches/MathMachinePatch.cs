@@ -6,11 +6,11 @@ using UnityEngine;
 
 namespace BBPlusAnimations.Patches
 {
+	[AnimationConditionalPatch("Math machine animation", "If True, Math machine will scream WOOW when doing a question correctly and also expand the result.")]
 	[HarmonyPatch(typeof(MathMachine))]
 	
 	internal class MathMachinePatch
 	{
-		[AnimationConditionalPatch("Math machine animation", "If True, Math machine will scream WOOW when doing a question correctly and also expand the result.")]
 		[HarmonyPatch("Completed")]
 		private static void Postfix(TMP_Text ___answerText, MathMachine __instance, ref AudioManager ___audMan, bool ___givePoints)
 		{
@@ -37,8 +37,15 @@ namespace BBPlusAnimations.Patches
 
 			yield break;
 		}
+		
 
-		[AnimationConditionalPatch("Enable hand animation", "If True, hands will be displayed on screen when performing certain interactions.")]
+	}
+
+	[AnimationConditionalPatch("Enable hand animation", "If True, hands will be displayed on screen when performing certain interactions.")]
+	[HarmonyPatch(typeof(MathMachine))]
+	internal class MathMachinePatchForHands
+	{
+		
 		[HarmonyPatch("Clicked", [typeof(int)])]
 		[HarmonyPrefix]
 		static void Prefix(bool[] ___playerIsHolding, int player)
@@ -46,7 +53,5 @@ namespace BBPlusAnimations.Patches
 			if (___playerIsHolding[player])
 				Singleton<CoreGameManager>.Instance.GetCamera(player).GetComponent<CameraHandUI>().PlayAnimation(CameraHandUI.AnimType.Insert);
 		}
-		
-
 	}
 }
