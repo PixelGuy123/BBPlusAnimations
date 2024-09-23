@@ -11,20 +11,20 @@ namespace BBPlusAnimations.Patches
 	[HarmonyPatch(typeof(FieldTripEntranceRoomFunction))]
 	internal class TripEntrancePatch
 	{
-		[HarmonyPatch("OnPlayerEnter")]
+		[HarmonyPatch("OnTripPlayed")]
 		[HarmonyTranspiler]
-		static IEnumerable<CodeInstruction> RemoveIf(IEnumerable<CodeInstruction> i)
-		{
-			var m = new CodeMatcher(i)
-			.End()
-			.MatchBack(false,
-				new(OpCodes.Call, AccessTools.PropertyGetter(typeof(Singleton<CoreGameManager>), "Instance")),
-				new(CodeInstruction.LoadField(typeof(CoreGameManager), "tripPlayed"))
-				);
-			for (int x = 0; x < 8; x++)
-				m.SetAndAdvance(OpCodes.Nop, null); // Nops because removing instructions fks up the Jumpers before this snippet
-			return m.InstructionEnumeration();
-		}
+		static IEnumerable<CodeInstruction> RemoveIf(IEnumerable<CodeInstruction> i) =>
+			new CodeMatcher(i)
+			.MatchForward(true, 
+				new(OpCodes.Ldarg_0),
+				new(CodeInstruction.LoadField(typeof(FieldTripEntranceRoomFunction), "busObjects")),
+				new(OpCodes.Callvirt, AccessTools.PropertyGetter(typeof(Component), "gameObject")),
+				new(OpCodes.Ldc_I4_0),
+				new(OpCodes.Callvirt, AccessTools.Method(typeof(GameObject), "SetActive", [typeof(bool)]))
+				)
+			.Advance(-1)
+			.Set(OpCodes.Ldc_I4_1, null) // Basically this.busObjects.gameObject.SetActive(true)
+			.InstructionEnumeration();
 
 
 
