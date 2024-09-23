@@ -28,26 +28,23 @@ namespace BBPlusAnimations.Patches
 
 
 
-		[HarmonyPatch("OnPlayerEnter")]
+		[HarmonyPatch("OnTripPlayed")]
 		[HarmonyPostfix]
 		static void AddMyOwnBusLeave(FieldTripEntranceRoomFunction __instance, Transform ___busObjects)
 		{
-			if (Singleton<CoreGameManager>.Instance.tripPlayed)
+			Transform bus = null;
+			foreach (var child in ___busObjects.AllChilds())
 			{
-				Transform bus = null;
-				foreach (var child in ___busObjects.AllChilds())
-				{
-					if (child.name != "Bus")
-						child.gameObject.SetActive(false);
-					else if (!bus)
-						bus = child;
-				}
+				if (child.name != "Bus")
+					child.gameObject.SetActive(false);
+				else if (!bus)
+					bus = child;
+			}
 
-				if (bus)
-				{
-					bus.GetComponentsInChildren<MeshRenderer>().Do(x => x.material = baldiInBus);
-					__instance.StartCoroutine(BusGoAway(bus, bus.GetComponentInChildren<PropagatedAudioManager>(), __instance.Room.ec));
-				}
+			if (bus)
+			{
+				bus.GetComponentsInChildren<MeshRenderer>().Do(x => x.material = baldiInBus);
+				__instance.StartCoroutine(BusGoAway(bus, bus.GetComponentInChildren<PropagatedAudioManager>(), __instance.Room.ec));
 			}
 		}
 
@@ -64,7 +61,7 @@ namespace BBPlusAnimations.Patches
 			while (timeSpeed < 6f)
 			{
 				audMan.volumeMultiplier += timeSpeed * 0.0005f;
-				audMan.pitchModifier += timeSpeed * 0.002f;
+				audMan.pitchModifier += timeSpeed * 0.02f;
 				if (ec.CellFromPosition(bus.transform.position).Null)
 					audMan.enabled = false; // To avoid exceptions
 
