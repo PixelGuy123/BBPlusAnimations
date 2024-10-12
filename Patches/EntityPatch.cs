@@ -1,5 +1,4 @@
 ﻿using HarmonyLib;
-using PixelInternalAPI.Classes;
 using System;
 using System.Collections;
 using UnityEngine;
@@ -7,15 +6,15 @@ using UnityEngine;
 namespace BBPlusAnimations.Patches
 {
 	[AnimationConditionalPatch("Entity unsquish animation", "If True, entities (npcs and player) will have an animation to indicate when they are unsquishing.")]
-	[HarmonyPatch(typeof(Entity), "Unsquish")]
+	[HarmonyPatch(typeof(Entity))]
 	internal class EntityPatch
 	{
-		private static bool Prefix(Entity __instance, ref bool ___squished, ref float ___squishTime)
+		[HarmonyPatch("Unsquish")]
+		[HarmonyPrefix]
+		private static bool UnsquishAnimation(Entity __instance)
 		{
 			if (__instance.BaseHeight < __instance.InternalHeight)
 			{
-				___squished = false;
-				___squishTime = 0f;
 				__instance.StartCoroutine(Animation(__instance));
 				return false;
 			}
@@ -23,9 +22,15 @@ namespace BBPlusAnimations.Patches
 			return true;
 		}
 
+		[HarmonyPatch("Squish")]
+		[HarmonyPrefix]
+		static void AntecipateTimer(ref float time) =>
+			time -= unsquishingAnimationLimit;
+		
+
 		static IEnumerator Animation(Entity entity)
 		{
-			float timer = 4f;
+			float timer = unsquishingAnimationLimit;
 			float factor = 0f;
 			float baseFactor = entity.BaseHeight / entity.InternalHeight;
 			float time = 0f;
@@ -55,9 +60,13 @@ namespace BBPlusAnimations.Patches
 			}
 
 			yield return null;
+
 			if (entity.Squished)
 				yield break;
+
 			entity.SetVerticalScale(1f);
+			entity.squished = false;
+			entity.squishTime = 0f;
 			UpdateTrigger(entity);
 			yield break;
 		}
@@ -66,5 +75,7 @@ namespace BBPlusAnimations.Patches
 		[HarmonyPatch("UpdateTriggerState")]
 		private static void UpdateTrigger(object instance) =>
 			throw new NotImplementedException("This is a stub");
+
+		const float unsquishingAnimationLimit = 4f;
 	}
 }
