@@ -65,7 +65,7 @@ namespace BBPlusAnimations
 
 
 			// Gum
-			Sprite[] gumSprs = TextureExtensions.LoadSpriteSheet(2, 1, 25f, ModPath, "gumSplashSheet.png");
+			Sprite[] gumSprs = TextureExtensions.LoadSpriteSheet(2, 1, 25f, ModPath, GetAssetName("gumSplashSheet.png"));
 
 			var gumHolder = new GameObject("gumSplash");
 			var gum = ObjectCreationExtensions.CreateSpriteBillboard(gumSprs[0], false).gameObject;
@@ -95,13 +95,13 @@ namespace BBPlusAnimations
 				});
 			}
 			yield return "Adding door locks for doors...";
-			Texture2D[] texs = TextureExtensions.LoadTextureSheet(2, 1, ModPath, "doorLocksSheet.png");
+			Texture2D[] texs = TextureExtensions.LoadTextureSheet(2, 1, ModPath, GetAssetName("doorLocksSheet.png"));
 			// Door
 			GenericExtensions.FindResourceObjects<StandardDoor>().Do(d => d.gameObject.AddComponent<StandardDoorExtraMaterials>().defaultTex = texs);// Sets a lock
 
 			yield return "Loading balloon pop animations...";
 			// Balloon Pop Animation
-			NumberBalloonPatch.explodeVisuals = TextureExtensions.LoadSpriteSheet(6, 1, 30f, ModPath, "ballExplodeAnim.png");
+			NumberBalloonPatch.explodeVisuals = TextureExtensions.LoadSpriteSheet(6, 1, 30f, ModPath, GetAssetName("ballExplodeAnim.png"));
 			NumberBalloonPatch.sound = ObjectCreators.CreateSoundObject(AssetLoader.AudioClipFromFile(Path.Combine(ModPath, GetAssetName("BalloonRespawn.wav"))), "something", SoundType.Voice, Color.white);
 			NumberBalloonPatch.sound.subtitle = false; // No sub
 
@@ -114,14 +114,14 @@ namespace BBPlusAnimations
 			canvas.gameObject.ConvertToPrefab(true);
 
 
-			TheTestPatch.sprites = [AssetLoader.SpriteFromTexture2D(TextureExtensions.CreateSolidTexture(480, 360, Color.black), 1f), .. TextureExtensions.LoadSpriteSheet(6, 1, 1f, ModPath, "theTestAnimation.png")];
+			TheTestPatch.sprites = [AssetLoader.SpriteFromTexture2D(TextureExtensions.CreateSolidTexture(480, 360, Color.black), 1f), .. TextureExtensions.LoadSpriteSheet(6, 1, 1f, ModPath, GetAssetName("theTestAnimation.png"))];
 
 			canvas.name = "TheTestOverlayCanvas";
 			TheTestPatch.canvas = canvas;
 
 			yield return "Loading playtime\'s jumprope cut animation...";
 			// Jumprope Sprites
-			PlaytimeJumpropePatch.sprites = TextureExtensions.LoadSpriteSheet(7, 1, 1f, ModPath, "jumpropeCut.png");
+			PlaytimeJumpropePatch.sprites = TextureExtensions.LoadSpriteSheet(7, 1, 1f, ModPath, GetAssetName("jumpropeCut.png"));
 			GenericExtensions.FindResourceObjects<Jumprope>().Do((x) =>
 			{
 				var comp = x.gameObject.AddComponent<GenericAnimationExtraComponent>();
@@ -173,7 +173,7 @@ namespace BBPlusAnimations
 			{
 				yield return "Loading plant particles...";
 				// Plant Particles
-				Sprite[] plantSprites = [null, .. TextureExtensions.LoadSpriteSheet(5, 1, 15f, new Vector2(0.5f, 0f), ModPath, "plantSheet.png")];
+				Sprite[] plantSprites = [null, .. TextureExtensions.LoadSpriteSheet(5, 1, 15f, new Vector2(0.5f, 0f), ModPath, GetAssetName("plantSheet.png"))];
 				mat = new Material(man.Get<Material>("particleMaterial"))
 				{
 					mainTexture = AssetLoader.TextureFromFile(Path.Combine(ModPath, GetAssetName("leaves.png")))
@@ -359,7 +359,7 @@ namespace BBPlusAnimations
 			var smokeParticle = new GameObject("SmokeParticles").AddComponent<ParticleSystem>();
 			var renderer = smokeParticle.GetComponent<ParticleSystemRenderer>();
 			renderer.material = new(man.Get<Material>("particleMaterial")) { mainTexture = AssetLoader.TextureFromFile(Path.Combine(ModPath, GetAssetName("smoke.png"))) };
-			FirstPrizePatches.audSorry = ObjectCreators.CreateSoundObject(AssetLoader.AudioClipFromFile(Path.Combine(ModPath, "firstprizebreak.wav")), "Vfx_FirstPrize_Sorry", SoundType.Voice, Color.cyan);
+			FirstPrizePatches.audSorry = ObjectCreators.CreateSoundObject(AssetLoader.AudioClipFromFile(Path.Combine(ModPath, GetAssetName("firstprizebreak.wav"))), "Vfx_FirstPrize_Sorry", SoundType.Voice, Color.cyan);
 
 			// First prize cracks
 			var crackHolder = new GameObject("Cracks");
@@ -562,7 +562,7 @@ namespace BBPlusAnimations
 
 			var craf = (ArtsAndCrafters)NPCMetaStorage.Instance.Get(Character.Crafters).value;
 
-			ArtsAndCraftersPatch.craftSprites = TextureExtensions.LoadSpriteSheet(6, 1, craf.visibleRenderer.sprite.pixelsPerUnit, ModPath, "crafterAngry.png");
+			ArtsAndCraftersPatch.craftSprites = TextureExtensions.LoadSpriteSheet(6, 1, craf.visibleRenderer.sprite.pixelsPerUnit, ModPath, GetAssetName("crafterAngry.png"));
 
 			// Notebook pickup audio
 			yield return "Loading notebook audio...";
@@ -751,7 +751,7 @@ namespace BBPlusAnimations
 
 		internal static string ModPath = string.Empty;
 
-		internal static string GetAssetName(string name) => "BBPlusAnimations_" + name;
+		public static string GetAssetName(string name) => "BBPlusAnimations_" + name;
 	}
 
 	static class ModInfo
