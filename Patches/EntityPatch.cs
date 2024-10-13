@@ -1,4 +1,5 @@
-﻿using HarmonyLib;
+﻿using BBPlusAnimations.Components;
+using HarmonyLib;
 using System;
 using System.Collections;
 using UnityEngine;
@@ -9,39 +10,58 @@ namespace BBPlusAnimations.Patches
 	[HarmonyPatch(typeof(Entity))]
 	internal class EntityPatch
 	{
+		[HarmonyReversePatch(HarmonyReversePatchType.Original)]
+		[HarmonyPatch("UpdateTriggerState")]
+		private static void UpdateTrigger(object instance) =>
+			throw new NotImplementedException("This is a stub");
+
+		[HarmonyReversePatch(HarmonyReversePatchType.Original)]
+		[HarmonyPatch("Unsquish")]
+		private static void Unsquish(object instance) =>
+			throw new NotImplementedException("This is a stub");
+
+		[HarmonyPatch("Awake")]
+		[HarmonyPrefix]
+		static void AniamtionComponentAddition(Entity __instance) =>
+			__instance.gameObject.AddComponent<GenericAnimationExtraComponent>();
+
 		[HarmonyPatch("Unsquish")]
 		[HarmonyPrefix]
-		private static bool UnsquishAnimation(Entity __instance)
+		private static bool UnsquishAnimation(Entity __instance, ref float ___squishTime)
 		{
-			if (__instance.BaseHeight < __instance.InternalHeight)
-			{
-				__instance.StartCoroutine(Animation(__instance));
-				return false;
-			}
-
-			return true;
+			if (__instance.BaseHeight >= __instance.InternalHeight)
+				return true;
+			___squishTime = unsquishingAnimationLimit + 1;
+			var co = __instance.GetComponent<GenericAnimationExtraComponent>();
+			if (co.runningAnimation != null)
+				__instance.StopCoroutine(co.runningAnimation);
+			co.runningAnimation = __instance.StartCoroutine(Animation(__instance));
+			return false;
 		}
 
 		[HarmonyPatch("Squish")]
 		[HarmonyPrefix]
-		static void AntecipateTimer(ref float time) =>
+		static void AntecipateTimer(Entity __instance, ref float time)
+		{
 			time -= unsquishingAnimationLimit;
-		
+			var co = __instance.GetComponent<GenericAnimationExtraComponent>();
+			if (co.runningAnimation != null)
+				__instance.StopCoroutine(co.runningAnimation);
+		}
+
 
 		static IEnumerator Animation(Entity entity)
 		{
 			float timer = unsquishingAnimationLimit;
 			float factor = 0f;
 			float baseFactor = entity.BaseHeight / entity.InternalHeight;
-			float time = 0f;
 
-			while (timer > 0f)
+			while (true)
 			{
-				if (entity.Squished) // Check whether it got squished again
-					yield break;
-				timer -= Singleton<BaseGameManager>.Instance.Ec.NpcTimeScale * Time.deltaTime;
-				time += Time.deltaTime;
-				factor = baseFactor + Mathf.Abs(Mathf.Sin(time * Singleton<BaseGameManager>.Instance.Ec.NpcTimeScale * 7f) / 6f);
+				timer -= Singleton<BaseGameManager>.Instance.Ec.EnvironmentTimeScale * Time.deltaTime;
+				if (timer <= 0f)
+					break;
+				factor = baseFactor + Mathf.Abs(Mathf.Sin((unsquishingAnimationLimit - timer) * 7f) * 0.12f);
 				entity.SetVerticalScale(factor);
 				yield return null;
 			}
@@ -49,9 +69,7 @@ namespace BBPlusAnimations.Patches
 
 			while (true)
 			{
-				if (entity.Squished)
-					yield break;
-				factor += (1f - factor) / 3f * 25f * Time.deltaTime * Singleton<BaseGameManager>.Instance.Ec.NpcTimeScale;
+				factor += (1f - factor) * 8.333f * Time.deltaTime * Singleton<BaseGameManager>.Instance.Ec.EnvironmentTimeScale;
 				if (factor >= 0.98f)
 					break;
 
@@ -61,20 +79,11 @@ namespace BBPlusAnimations.Patches
 
 			yield return null;
 
-			if (entity.Squished)
-				yield break;
-
-			entity.SetVerticalScale(1f);
-			entity.squished = false;
-			entity.squishTime = 0f;
-			UpdateTrigger(entity);
+			Unsquish(entity);
 			yield break;
 		}
 
-		[HarmonyReversePatch(HarmonyReversePatchType.Original)]
-		[HarmonyPatch("UpdateTriggerState")]
-		private static void UpdateTrigger(object instance) =>
-			throw new NotImplementedException("This is a stub");
+
 
 		const float unsquishingAnimationLimit = 4f;
 	}
