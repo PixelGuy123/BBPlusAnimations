@@ -41,6 +41,7 @@ namespace BBPlusAnimations
 
 
 			ModPath = AssetLoader.GetModPath(this);
+			AssetLoader.LoadLocalizationFolder(Path.Combine(ModPath, "Language", "English"), Language.English);
 
 			LoadingEvents.RegisterOnAssetsLoaded(Info, OnAssetLoad(), false);
 
@@ -613,12 +614,13 @@ namespace BBPlusAnimations
 
 			yield return "Creating Dr Reflex\'s Hammer...";
 
-			var hammer = ObjectCreationExtensions.CreateSpriteBillboard(AssetLoader.SpriteFromTexture2D(AssetLoader.TextureFromFile(Path.Combine(ModPath, GetAssetName("reflexHammer.png"))), 65f)).AddSpriteHolder(0f, 0);
-			hammer.transform.parent.gameObject.ConvertToPrefab(true);
-
+			var hammer = ObjectCreationExtensions.CreateSpriteBillboard(AssetLoader.SpriteFromTexture2D(AssetLoader.TextureFromFile(Path.Combine(ModPath, GetAssetName("reflexHammer.png"))), 65f)).AddSpriteHolder(out var hammerRenderer, 0f, 0);
+			hammer.gameObject.ConvertToPrefab(true);
+			hammer.name = "ReflexHammer";
+			hammerRenderer.name = "ReflexHammer_Renderer";
 			hammer.gameObject.AddComponent<PickupBob>();
 
-			GenericExtensions.FindResourceObjects<DrReflex>().Do(x => x.gameObject.AddComponent<DrReflexHammerComponent>().hammerPre = hammer.transform.parent);
+			GenericExtensions.FindResourceObjects<DrReflex>().Do(x => x.gameObject.AddComponent<DrReflexHammerComponent>().hammerPre = hammer.transform);
 
 			yield return "Creating Beans' worried animation...";
 
@@ -760,7 +762,7 @@ namespace BBPlusAnimations
 
 		public const string PLUGIN_NAME = "BB+ New Animations";
 
-		public const string PLUGIN_VERSION = "1.2.4.3";
+		public const string PLUGIN_VERSION = "1.2.5";
 	}
 
 	internal static class ConfigExtensions
