@@ -11,7 +11,7 @@ namespace BBPlusAnimations.Patches
 	
 	internal class MathMachinePatch
 	{
-		[HarmonyPatch("Completed")]
+		[HarmonyPatch("Completed", [typeof(int)])]
 		private static void Postfix(TMP_Text ___answerText, MathMachine __instance, ref AudioManager ___audMan, bool ___givePoints)
 		{
 			__instance.StartCoroutine(Animation(__instance.room.ec, ___answerText.transform));
