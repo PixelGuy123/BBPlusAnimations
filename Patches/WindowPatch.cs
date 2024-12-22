@@ -8,9 +8,12 @@ namespace BBPlusAnimations.Patches
 	[HarmonyPatch(typeof(Window), "Break", [typeof(bool)])]
 	internal class WindowPatch
 	{
-		static void Postfix(Window __instance, bool ___broken)
+		static void Prefix(bool ___broken, out bool __state) =>
+			__state = ___broken;
+		
+		static void Postfix(Window __instance, bool ___broken, bool __state)
 		{
-			if (___broken)
+			if (___broken != __state) // If it's different, it means it has actually broke
 			{
 				var p = Object.Instantiate(glassPieces);
 				p.transform.position = __instance.windows[0].transform.position;
