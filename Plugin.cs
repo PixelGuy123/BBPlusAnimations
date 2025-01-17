@@ -26,12 +26,14 @@ namespace BBPlusAnimations
 
 	public class BasePlugin : BaseUnityPlugin
 	{
-		ConfigEntry<bool> enableBsodaParticles, enablePortalPosterAnimation, enablePlantAnimation, enableCraftersAcceleration, enablePhoneChangeVisual, enableChalkEraserVisual;
+		ConfigEntry<bool> enableBsodaParticles, enablePortalPosterAnimation, enablePlantAnimation, enableCraftersAcceleration, enablePhoneChangeVisual, enableChalkEraserVisual, enableLightSwitches;
 		internal static ConfigFile file;
 
-		internal static int enabledSettings = 40;
+		internal static int enabledSettings = 1;
 
+#pragma warning disable IDE0051 // Remover membros privados não utilizados
 		private void Awake()
+#pragma warning restore IDE0051 // Remover membros privados não utilizados
 		{
 			file = Config;
 			logger = Logger;
@@ -44,6 +46,7 @@ namespace BBPlusAnimations
 			AssetLoader.LoadLocalizationFolder(Path.Combine(ModPath, "Language", "English"), Language.English);
 
 			LoadingEvents.RegisterOnAssetsLoaded(Info, OnAssetLoad(), false);
+			LoadingEvents.RegisterOnAssetsLoaded(Info, OnAssetLoadPost(), true);
 
 			enableBsodaParticles = Config.BindAndCheck("Animation Management", "Bsoda Particles", true, "If True, bsoda particles will be enabled for every bsoda instance in-game (a disabled/unfinished feature in base game).");
 			enablePortalPosterAnimation = Config.BindAndCheck("Animation Management", "Portal Poster Rotation", true, "If True, portal posters will always be seen rotating when placed in a wall.");
@@ -51,11 +54,12 @@ namespace BBPlusAnimations
 			enableCraftersAcceleration = Config.BindAndCheck("Animation Management", "Crafters acceleration", true, "If True, Crafters acceleration will be increased when teleporting you.");
 			enablePhoneChangeVisual = Config.BindAndCheck("Animation Management", "Phone visual change", true, "If True, the phone will display as enabled when used.");
 			enableChalkEraserVisual = Config.BindAndCheck("Animation Management", "Chalkeraser visible", true, "If True, the chalk eraser will have an animation when being used.");
+			enableLightSwitches = Config.BindAndCheck("Animation Management", "Light switches", true, "If True, light switches will spawn in (almost) every room to display whether they are powered or not.");
 		}
 
 		IEnumerator OnAssetLoad()
 		{
-			yield return 1 + enabledSettings;
+			yield return enabledSettings;
 
 			yield return "Grabbing material...";
 			// Particle Material
@@ -223,7 +227,10 @@ namespace BBPlusAnimations
 						pars[i] = particle;
 					}
 
-					var col = new GameObject("PlantCollider").AddComponent<CapsuleCollider>(); // I hate the plant having 2 prefabs >:(
+					var col = new GameObject("PlantCollider")
+					{
+						layer = LayerStorage.ignoreRaycast
+					}.AddComponent<CapsuleCollider>(); // I hate the plant having 2 prefabs >:(
 					col.transform.SetParent(x.renderers[0].transform);
 					col.transform.localPosition = Vector3.up * 5f;
 					col.isTrigger = true;
@@ -490,7 +497,6 @@ namespace BBPlusAnimations
 			var whistletex = AssetLoader.SpriteFromTexture2D(AssetLoader.TextureFromFile(Path.Combine(ModPath, GetAssetName("whistleScreen.png"))), 1f);
 			GenericExtensions.FindResourceObjects<ITM_PrincipalWhistle>().Do(x =>
 			{
-
 				var principalCanvas = ObjectCreationExtensions.CreateCanvas(); // Only way to make a proper overlay on this
 				principalCanvas.name = "PrincipalWhistleCanvas";
 				ObjectCreationExtensions.CreateImage(principalCanvas, whistletex);
@@ -679,8 +685,7 @@ namespace BBPlusAnimations
 
 			yield return "Creating hand animations...";
 
-			Sprite[][] handSprs = null;
-			handSprs = [[.. TextureExtensions.LoadSpriteSheet(13, 1, 1f, ModPath, GetAssetName("handInsert.png"))], [.. TextureExtensions.LoadSpriteSheet(11, 1, 1f, ModPath, GetAssetName("pickupHand.png"))]];
+			Sprite[] handSprs = TextureExtensions.LoadSpriteSheet(4, 7, 1f, ModPath, GetAssetName("pickupHand.png"));
 
 
 			GenericExtensions.FindResourceObjects<GameCamera>().Do(x =>
@@ -691,15 +696,14 @@ namespace BBPlusAnimations
 				handImg.enabled = false;
 
 				handCanvas.transform.SetParent(x.transform);
-				handImg.transform.localScale = new(2f, 2f, 2f);
-				handImg.transform.localPosition = new(-319.76f, 178.83f);
+				handImg.transform.localScale = Vector3.one;
+				handImg.transform.localPosition = Vector3.zero;
 
 				var comp = x.gameObject.AddComponent<CameraHandUI>();
 
 				comp.canvas = handCanvas;
 				comp.img = handImg;
-				comp.sprsInsert = handSprs[0];
-				comp.sprsPickup = handSprs[1];
+				comp.sprsPickup = handSprs;
 
 			});
 
@@ -738,7 +742,99 @@ namespace BBPlusAnimations
 				flipperParticle.transform.localPosition = Vector3.down * 10f;
 			});
 
+			yield return "Creating hand animation for elevator screen...";
 
+			Sprite[] handAnim = TextureExtensions.LoadSpriteSheet(5, 4, 1f, ModPath, GetAssetName("handPressBut.png"));
+
+			ElevatorScreenPatch.handAnim = handAnim.Take(0, 12);
+			ElevatorScreenPatch.handAfterPressAnim = handAnim.Take(12, 8);
+
+
+			yield return "Creating Hideable Locker animation...";
+
+			var tex = AssetLoader.TextureFromFile(Path.Combine(ModPath, GetAssetName("blueLockerAlmostOpen.png")));
+			GenericExtensions.FindResourceObjects<HideableLocker>().Do(x =>
+			{
+				if (x.GetComponent<HideableLockerExtraComponent>()) return;
+
+				var comp = x.gameObject.AddComponent<HideableLockerExtraComponent>();
+				comp.renderer = x.GetComponentInChildren<MeshRenderer>();
+
+				comp.closed = (Texture2D)comp.renderer.materials[0].GetTexture("_MainTex");
+				comp.open = tex;
+			});
+
+			yield return "Loading teleporter particles...";
+			// Teleport Particle
+			flipperParticle = new GameObject("teleportParticles", typeof(ParticleSystem));
+			flipperParticle.ConvertToPrefab(true);
+
+			flipperParticle.GetComponent<ParticleSystemRenderer>().material = new(man.Get<Material>("particleMaterial")) { mainTexture = AssetLoader.TextureFromFile(Path.Combine(ModPath, GetAssetName("teleportParticles.png"))) };
+
+			particleSystem = flipperParticle.GetComponent<ParticleSystem>();
+			anim = particleSystem.textureSheetAnimation;
+			anim.enabled = true;
+			anim.fps = 16f;
+			anim.timeMode = ParticleSystemAnimationTimeMode.FPS;
+			anim.startFrame = new(0, 3);
+			anim.numTilesX = 2;
+			anim.numTilesY = 2;
+			anim.animation = ParticleSystemAnimationType.WholeSheet;
+			anim.mode = ParticleSystemAnimationMode.Grid;
+			anim.cycleCount = int.MaxValue; // Bruh
+
+			main = particleSystem.main;
+			main.gravityModifierMultiplier = 0.01f;
+			main.startLifetimeMultiplier = 10f;
+			main.startSpeedMultiplier = 0.75f;
+
+			// I don't think this is actually doing anything, but whatever
+			vel = particleSystem.velocityOverLifetime;
+			vel.enabled = true;
+			vel.x = new(-7f, 7f);
+			vel.y = new(-7f, 7f);
+			vel.z = new(-7f, 7f);
+
+
+			emission = particleSystem.emission;
+			emission.rateOverTime = 0f;
+
+			emitter = flipperParticle.AddComponent<TemporaryParticles>();
+			emitter.particles = particleSystem;
+			emitter.minParticles = 75;
+			emitter.maxParticles = 105;
+
+			flipperParticle.transform.rotation = Quaternion.Euler(270f, 0f, 0f);
+
+			ITMTeleporterPatch.parts = emitter;
+
+			yield break;
+		}
+
+		IEnumerator OnAssetLoadPost()
+		{
+			yield return 1;
+			yield return "Loading light switches...";
+			if (enableLightSwitches.Value)
+			{
+				var lightSwitchSprites = TextureExtensions.LoadSpriteSheet(2, 1, 76f, ModPath, GetAssetName("lightswitch.png"));
+
+				var lightSwitchPre = ObjectCreationExtensions.CreateSpriteBillboard(lightSwitchSprites[0], false);
+				lightSwitchPre.name = "LightSwitch";
+				lightSwitchPre.gameObject.ConvertToPrefab(true);
+
+				foreach (var room in Resources.FindObjectsOfTypeAll<RoomAsset>())
+				{
+					if (room.roomFunctionContainer && room.type == RoomType.Room &&
+						room.category != RoomCategory.Special && room.category != RoomCategory.Mystery && room.category != RoomCategory.Store && room.category != RoomCategory.FieldTrip && room.category != RoomCategory.Null)
+					{
+						var lRoomFunc = room.AddRoomFunctionToContainer<LightSwitchRoomFunction>();
+						lRoomFunc.on = lightSwitchSprites[0];
+						lRoomFunc.off = lightSwitchSprites[1];
+						lRoomFunc.lightSwitchPre = lightSwitchPre;
+					}
+				}
+			}
 
 			yield break;
 		}
@@ -762,7 +858,7 @@ namespace BBPlusAnimations
 
 		public const string PLUGIN_NAME = "BB+ New Animations";
 
-		public const string PLUGIN_VERSION = "1.2.5.1";
+		public const string PLUGIN_VERSION = "1.2.6";
 	}
 
 	internal static class ConfigExtensions
@@ -770,16 +866,23 @@ namespace BBPlusAnimations
 		public static ConfigEntry<bool> BindAndCheck(this ConfigFile file, string section, string key, bool defaultValue, string description)
 		{
 			var co = file.Bind(section, key, defaultValue, description);
-			if (!co.Value)
-				BasePlugin.enabledSettings--;
+			if (co.Value)
+				BasePlugin.enabledSettings++;
 			return co;
 		}
 		public static ConfigEntry<bool> BindAndCheck(this ConfigFile file, string section, string key, bool defaultValue)
 		{
 			var co = file.Bind(section, key, defaultValue);
-			if (!co.Value)
-				BasePlugin.enabledSettings--;
+			if (co.Value)
+				BasePlugin.enabledSettings++;
 			return co;
+		}
+		public static T[] Take<T>(this T[] ar, int index, int count)
+		{
+			var newAr = new T[count];
+			for (int z = 0; z < count; z++)
+				newAr[z] = ar[index++];
+			return newAr;
 		}
 	}
 

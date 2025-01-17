@@ -1,5 +1,4 @@
-﻿using BBPlusAnimations.Components;
-using HarmonyLib;
+﻿using HarmonyLib;
 using System.Collections;
 using TMPro;
 using UnityEngine;
@@ -39,19 +38,5 @@ namespace BBPlusAnimations.Patches
 		}
 		
 
-	}
-
-	[AnimationConditionalPatch("Enable hand animation", "If True, hands will be displayed on screen when performing certain interactions.")]
-	[HarmonyPatch(typeof(MathMachine))]
-	internal class MathMachinePatchForHands
-	{
-		
-		[HarmonyPatch("Clicked", [typeof(int)])]
-		[HarmonyPrefix]
-		static void Prefix(bool[] ___playerIsHolding, int player)
-		{
-			if (___playerIsHolding[player])
-				Singleton<CoreGameManager>.Instance.GetCamera(player).GetComponent<CameraHandUI>().PlayAnimation(CameraHandUI.AnimType.Insert);
-		}
 	}
 }

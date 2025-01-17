@@ -22,23 +22,27 @@ namespace BBPlusAnimations.Components
 
 			if (currentAnim != null)
 				StopCoroutine(currentAnim);
-			Sprite[] sprs = type switch
+			float speed;
+			Sprite[] sprs;
+			switch (type)
 			{
-				AnimType.Pickup => sprsPickup,
-				AnimType.Insert => sprsInsert,
-				_ => throw new System.ArgumentException("The AnimType enum is invalid."),
+				case AnimType.Pickup:
+					sprs = sprsPickup;
+					speed = speedForPickup;
+					break;
+				default: throw new System.ArgumentException("The AnimType enum is invalid.");
 			};
-			currentAnim = StartCoroutine(Animator(sprs));
+			currentAnim = StartCoroutine(Animator(sprs, speed));
 		}
 
 
-		IEnumerator Animator(Sprite[] sprs)
+		IEnumerator Animator(Sprite[] sprs, float speed)
 		{
 			img.enabled = true;			
 			float frame = 0f;
 			while (true)
 			{
-				frame += Time.deltaTime * 26f;
+				frame += Time.deltaTime * speed;
 				if (frame >= sprs.Length)
 					break;
 
@@ -53,7 +57,10 @@ namespace BBPlusAnimations.Components
 		bool initialized = false;
 
 		[SerializeField]
-		internal Sprite[] sprsPickup, sprsInsert;
+		internal Sprite[] sprsPickup;
+
+		[SerializeField]
+		internal float speedForPickup = 22.5f;
 
 		[SerializeField]
 		internal Image img = null;
@@ -63,8 +70,7 @@ namespace BBPlusAnimations.Components
 
 		public enum AnimType
 		{
-			Pickup,
-			Insert
+			Pickup
 		}
 	}
 }
