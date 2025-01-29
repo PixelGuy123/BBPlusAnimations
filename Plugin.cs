@@ -858,7 +858,7 @@ namespace BBPlusAnimations
 
 		public const string PLUGIN_NAME = "BB+ New Animations";
 
-		public const string PLUGIN_VERSION = "1.2.6";
+		public const string PLUGIN_VERSION = "1.2.6.1";
 	}
 
 	internal static class ConfigExtensions

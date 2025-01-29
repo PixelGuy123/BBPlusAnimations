@@ -2,6 +2,7 @@
 using HarmonyLib;
 using System;
 using System.Collections;
+using System.Collections.Generic;
 using UnityEngine;
 
 namespace BBPlusAnimations.Patches
@@ -15,29 +16,33 @@ namespace BBPlusAnimations.Patches
 		private static void UpdateTrigger(object instance) =>
 			throw new NotImplementedException("This is a stub");
 
-		[HarmonyReversePatch(HarmonyReversePatchType.Original)]
-		[HarmonyPatch("Unsquish")]
-		private static void Unsquish(object instance) =>
-			throw new NotImplementedException("This is a stub");
-
 		[HarmonyPatch("Awake")]
 		[HarmonyPrefix]
 		static void AniamtionComponentAddition(Entity __instance) =>
 			__instance.gameObject.AddComponent<GenericAnimationExtraComponent>();
 
-		[HarmonyPatch("Unsquish")]
-		[HarmonyPrefix]
-		private static bool UnsquishAnimation(Entity __instance, ref float ___squishTime)
-		{
-			if (__instance.BaseHeight >= __instance.InternalHeight)
-				return true;
-			___squishTime = unsquishingAnimationLimit + 1;
-			var co = __instance.GetComponent<GenericAnimationExtraComponent>();
-			if (co.runningAnimation != null)
-				__instance.StopCoroutine(co.runningAnimation);
-			co.runningAnimation = __instance.StartCoroutine(Animation(__instance));
-			return false;
-		}
+		[HarmonyPatch("Update")]
+		[HarmonyTranspiler]
+		static IEnumerable<CodeInstruction> GetUnsquishWorking(IEnumerable<CodeInstruction> i) =>
+			new CodeMatcher(i)
+			.End()
+			.MatchBack(false,
+				new CodeMatch(CodeInstruction.Call(typeof(Entity), "Unsquish"))
+				)
+			.SetInstruction(Transpilers.EmitDelegate((Entity instance) =>
+			{
+				if (instance.BaseHeight >= instance.InternalHeight)
+				{
+					instance.Unsquish();
+					return;
+				}
+				instance.squishTime = unsquishingAnimationLimit + 15f;
+				var co = instance.GetComponent<GenericAnimationExtraComponent>();
+				if (co.runningAnimation != null)
+					instance.StopCoroutine(co.runningAnimation);
+				co.runningAnimation = instance.StartCoroutine(Animation(instance));
+			}))
+			.InstructionEnumeration();
 
 		[HarmonyPatch("Squish")]
 		[HarmonyPrefix]
@@ -55,10 +60,11 @@ namespace BBPlusAnimations.Patches
 			float timer = unsquishingAnimationLimit;
 			float factor = 0f;
 			float baseFactor = entity.BaseHeight / entity.InternalHeight;
+			var ec = entity.environmentController;
 
 			while (true)
 			{
-				timer -= Singleton<BaseGameManager>.Instance.Ec.EnvironmentTimeScale * Time.deltaTime;
+				timer -= ec.EnvironmentTimeScale * Time.deltaTime;
 				if (timer <= 0f)
 					break;
 				factor = baseFactor + Mathf.Abs(Mathf.Sin((unsquishingAnimationLimit - timer) * 7f) * 0.12f);
@@ -69,7 +75,7 @@ namespace BBPlusAnimations.Patches
 
 			while (true)
 			{
-				factor += (1f - factor) * 8.333f * Time.deltaTime * Singleton<BaseGameManager>.Instance.Ec.EnvironmentTimeScale;
+				factor += (1f - factor) * 8.333f * Time.deltaTime * ec.EnvironmentTimeScale;
 				if (factor >= 0.98f)
 					break;
 
@@ -79,7 +85,7 @@ namespace BBPlusAnimations.Patches
 
 			yield return null;
 
-			Unsquish(entity);
+			entity.Unsquish();
 			yield break;
 		}
 
