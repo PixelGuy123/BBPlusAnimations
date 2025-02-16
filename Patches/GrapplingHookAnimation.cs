@@ -28,9 +28,9 @@ namespace BBPlusAnimations.Patches
 
 		[HarmonyPatch("Update")]
 		[HarmonyPostfix]
-		private static void Animation(ITM_GrapplingHook __instance, bool ___locked, float ___force, bool ___snapped, bool __state)
+		private static void Animation(ITM_GrapplingHook __instance, bool ___locked, float ___force, bool ___snapped, bool __state, bool __runOriginal) // Should only run if runOriginal is true to avoid incompatibilities with other mods...
 		{
-			if (___locked && !___snapped && __state)
+			if (___locked && __runOriginal && !___snapped && __state)
 				__instance.GetComponent<GrapplingHookFOVHolder>().modifier.addend = initialFov + ___force * 1.2f;
 		}
 

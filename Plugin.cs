@@ -196,7 +196,7 @@ namespace BBPlusAnimations
 						particle.transform.rotation = Quaternion.Euler(90f, 0f, 0f);
 						var main = particle.main;
 						main.gravityModifierMultiplier = 0.03f;
-						main.startLifetimeMultiplier = 10f;
+						main.startLifetimeMultiplier = 3f + i;
 
 						var vel = particle.velocityOverLifetime;
 						vel.enabled = true;
@@ -223,6 +223,9 @@ namespace BBPlusAnimations
 						co.collidesWith = LayerStorage.windowLayer | 1;
 						co.bounceMultiplier = 0f;
 						co.lifetimeLossMultiplier = 0f;
+
+						var emission = particle.emission;
+						emission.enabled = false;
 
 						pars[i] = particle;
 					}
@@ -858,7 +861,7 @@ namespace BBPlusAnimations
 
 		public const string PLUGIN_NAME = "BB+ New Animations";
 
-		public const string PLUGIN_VERSION = "1.2.6.1";
+		public const string PLUGIN_VERSION = "1.2.6.2";
 	}
 
 	internal static class ConfigExtensions
