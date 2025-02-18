@@ -34,7 +34,7 @@ namespace BBPlusAnimations.Patches
 				gum.transform.rotation = Quaternion.Euler(0f, (__instance.transform.rotation.eulerAngles.y + 180f) % 360f, 0f); // Quaternion.Inverse doesn't reverse y with 180 and 0 angles. Wth
 				gum.transform.localScale = Vector3.zero;
 				//gum.gameObject.SetActive(true);
-				gum.GetComponent<EmptyMonoBehaviour>().StartCoroutine(Timer(gum, 10f, __instance.ec));
+				gum.GetComponent<EmptyMonoBehaviour>()?.StartCoroutine(Timer(gum, 10f, __instance.ec));
 			}
 		}
 

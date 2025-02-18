@@ -27,7 +27,7 @@ namespace BBPlusAnimations.Patches
 			.Advance(2)
 			.InsertAndAdvance(
 				new(OpCodes.Ldloc_1),
-				Transpilers.EmitDelegate<System.Action<ITM_Boots>>(x => x.GetComponent<BootsDistanceReach>().IncrementDistance(float.IsNaN(x.pm.plm.RealVelocity) ? 0f : x.pm.plm.RealVelocity / 25f))
+				Transpilers.EmitDelegate<System.Action<ITM_Boots>>(x => x.GetComponent<BootsDistanceReach>()?.IncrementDistance(float.IsNaN(x.pm.plm.RealVelocity) ? 0f : x.pm.plm.RealVelocity / 25f))
 				)
 			.InstructionEnumeration();
 	}

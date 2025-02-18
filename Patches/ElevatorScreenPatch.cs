@@ -89,7 +89,7 @@ namespace BBPlusAnimations.Patches
 		public static void AddProhibitedElevatorType(System.Type t) => // If a mods wants to add some custom elevator screen, they can also call this
 			prohibitedTypes.Add(t);
 
-		static HashSet<System.Type> prohibitedTypes = [];
+		readonly static HashSet<System.Type> prohibitedTypes = [];
 
 		const float speed = 24.5f;
 	}

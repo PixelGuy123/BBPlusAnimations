@@ -26,6 +26,9 @@ namespace BBPlusAnimations.Patches
 			if (___slotsToSteal.Count > 0)
 			{
 				var co = __instance.GetComponent<BullyBlinkComponent>();
+				if (!co)
+					return;
+
 				co.blink = false;
 				co.itemRenderer.sprite = ItemManagerPatch.lastRemovedItem.itemSpriteLarge;
 
@@ -42,14 +45,21 @@ namespace BBPlusAnimations.Patches
 		[HarmonyPostfix]
 		static void BullyDisappearRapid(Bully __instance, SpriteRenderer ___spriteToHide)
 		{
-			___spriteToHide.enabled = true;
-			__instance.StartCoroutine(HideAnimation(__instance, ___spriteToHide, __instance.GetComponent<BullyBlinkComponent>().itemRenderer));
+			var co = __instance.GetComponent<BullyBlinkComponent>();
+			if (co)
+			{
+				___spriteToHide.enabled = true;
+				__instance.StartCoroutine(HideAnimation(__instance, ___spriteToHide, co));
+			}
 		}
 
-		static IEnumerator HideAnimation(Bully bu, SpriteRenderer ren, SpriteRenderer ren2)
+		static IEnumerator HideAnimation(Bully bu, SpriteRenderer ren, BullyBlinkComponent co)
 		{
+			var ren2 = co.itemRenderer;
+
 			var color = ren.color;
 			var color2 = ren2.color;
+
 			while (true)
 			{
 				color.a -= 0.4f * bu.TimeScale * Time.deltaTime;
@@ -70,7 +80,7 @@ namespace BBPlusAnimations.Patches
 			ren.color = color;
 			ren2.color = color2;
 
-			bu.GetComponent<BullyBlinkComponent>().blink = true;
+			co.blink = true;
 
 			yield break;
 		}

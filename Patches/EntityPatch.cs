@@ -38,9 +38,12 @@ namespace BBPlusAnimations.Patches
 				}
 				instance.squishTime = unsquishingAnimationLimit + 15f;
 				var co = instance.GetComponent<GenericAnimationExtraComponent>();
-				if (co.runningAnimation != null)
-					instance.StopCoroutine(co.runningAnimation);
-				co.runningAnimation = instance.StartCoroutine(Animation(instance));
+				if (co)
+				{
+					if (co.runningAnimation != null)
+						instance.StopCoroutine(co.runningAnimation);
+					co.runningAnimation = instance.StartCoroutine(Animation(instance));
+				}
 			}))
 			.InstructionEnumeration();
 
@@ -50,7 +53,7 @@ namespace BBPlusAnimations.Patches
 		{
 			time -= unsquishingAnimationLimit;
 			var co = __instance.GetComponent<GenericAnimationExtraComponent>();
-			if (co.runningAnimation != null)
+			if (co && co.runningAnimation != null)
 				__instance.StopCoroutine(co.runningAnimation);
 		}
 

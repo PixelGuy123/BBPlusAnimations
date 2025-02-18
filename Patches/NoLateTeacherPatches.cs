@@ -23,7 +23,7 @@ namespace BBPlusAnimations.Patches
 			if (player.Tagged) return;
 
 			var comp = ___pomp.GetComponent<GenericAnimationExtraComponent>();
-			if (!comp.isActive)
+			if (comp && !comp.isActive)
 			{
 				comp.isActive = true;
 				if (comp.runningAnimation != null)
@@ -37,7 +37,7 @@ namespace BBPlusAnimations.Patches
 		static void RevertEyeAnimation(NoLateTeacher __instance)
 		{
 			var comp = __instance.GetComponent<GenericAnimationExtraComponent>();
-			if (comp.isActive) 
+			if (comp && comp.isActive) 
 			{
 				comp.isActive = false;
 				if (comp.runningAnimation != null)
@@ -51,7 +51,7 @@ namespace BBPlusAnimations.Patches
 		static void RevertEyeAnimationWhenLost(NoLateTeacher ___pomp)
 		{
 			var comp = ___pomp.GetComponent<GenericAnimationExtraComponent>();
-			if (comp.isActive)
+			if (comp && comp.isActive)
 			{
 				comp.isActive = false;
 				if (comp.runningAnimation != null)

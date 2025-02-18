@@ -4,12 +4,28 @@ namespace BBPlusAnimations.Components
 {
 	public class ChalkBeatingUpInGround : MonoBehaviour
 	{
-		void Start() =>
+		[SerializeField]
+		internal ParticleSystem particles;
+
+		[SerializeField]
+		internal SpriteRenderer renderer;
+
+		void Start()
+		{
 			UpdatePos();
+		}
 		
 		void Update()
 		{
+			var emission = particles.emission;
+			if (!emission.enabled)
+			{
+				renderer.enabled = false;
+				return;
+			}
 			if (Time.timeScale == 0f) return;
+
+			renderer.enabled = true;
 
 			beginDelay -= Time.deltaTime;
 			if (beginDelay >= 0f)

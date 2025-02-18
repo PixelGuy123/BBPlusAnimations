@@ -10,8 +10,12 @@ namespace BBPlusAnimations.Patches
 	{
 		[HarmonyPatch("Initialize")]
 		[HarmonyPrefix]
-		private static void GetSprite(ChalkFace __instance, SpriteRenderer ___flyingRenderer) =>
-			__instance.GetComponent<GenericAnimationExtraComponent>().sprites[0] = ___flyingRenderer.sprite;
+		private static void GetSprite(ChalkFace __instance, SpriteRenderer ___flyingRenderer)
+		{
+			var co = __instance.GetComponent<GenericAnimationExtraComponent>();
+			if (co)
+				co.sprites[0] = ___flyingRenderer.sprite;
+		}
 		
 
 		[HarmonyPatch("AdvanceLaughter")]
@@ -19,7 +23,9 @@ namespace BBPlusAnimations.Patches
 		private static void RotateChalkles(ChalkFace __instance, ref SpriteRenderer ___flyingRenderer)
 		{
 			___flyingRenderer.SetSpriteRotation(35f * Mathf.Sin(speed * Time.fixedTime)); // make chalkles rotate
-			___flyingRenderer.sprite = __instance.GetComponent<GenericAnimationExtraComponent>().sprites[Mathf.FloorToInt(spriteSpeed * Time.fixedTime) % 2];
+			var co = __instance.GetComponent<GenericAnimationExtraComponent>();
+			if (co)
+				___flyingRenderer.sprite = co.sprites[Mathf.FloorToInt(spriteSpeed * Time.fixedTime) % 2];
 		}
 
 		const float speed = 4f, spriteSpeed = 3f;

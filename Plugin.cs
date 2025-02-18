@@ -641,11 +641,14 @@ namespace BBPlusAnimations
 
 			if (enableChalkEraserVisual.Value)
 			{
-				var chalkVisual = ObjectCreationExtensions.CreateSpriteBillboard(ItemMetaStorage.Instance.FindByEnum(Items.ChalkEraser).value.itemSpriteLarge);
-				chalkVisual.gameObject.AddComponent<ChalkBeatingUpInGround>();
-
-
-				GenericExtensions.FindResourceObjects<ChalkEraser>().Do(x => chalkVisual.transform.SetParent(x.transform));
+				GenericExtensions.FindResourceObjects<ChalkEraser>().Do(x =>
+				{
+					var chalkVisual = ObjectCreationExtensions.CreateSpriteBillboard(ItemMetaStorage.Instance.FindByEnum(Items.ChalkEraser).value.itemSpriteLarge);
+					var chalkGround = chalkVisual.gameObject.AddComponent<ChalkBeatingUpInGround>();
+					chalkGround.renderer = chalkVisual;
+					chalkGround.particles = x.GetComponent<ParticleSystem>();
+					chalkVisual.transform.SetParent(x.transform);
+				});
 			}
 
 			yield return "Creating glass piece for window...";
@@ -861,7 +864,7 @@ namespace BBPlusAnimations
 
 		public const string PLUGIN_NAME = "BB+ New Animations";
 
-		public const string PLUGIN_VERSION = "1.2.6.2";
+		public const string PLUGIN_VERSION = "1.2.6.4";
 	}
 
 	internal static class ConfigExtensions

@@ -12,8 +12,12 @@ namespace BBPlusAnimations.Patches
 		[HarmonyPrefix]
 		private static void EnableIt(GottaSweep __instance)
 		{
-			__instance.GetComponent<GenericAnimationExtraComponent>().isActive = true;
-			__instance.GetComponent<GottaSweepComponent>().cooldown = cooldown;
+			var anim = __instance.GetComponent<GenericAnimationExtraComponent>();
+			if (anim)
+				anim.isActive = true;
+			var sweep = __instance.GetComponent<GottaSweepComponent>();
+			if (sweep)
+				sweep.cooldown = cooldown;
 		}
 
 		[HarmonyPatch("StopSweeping")]
@@ -21,8 +25,11 @@ namespace BBPlusAnimations.Patches
 		private static void DisableIt(GottaSweep __instance)
 		{
 			var comp = __instance.GetComponent<GenericAnimationExtraComponent>();
-			comp.isActive = false;
-			__instance.spriteRenderer[0].sprite = comp.sprites[0];
+			if (comp)
+			{
+				comp.isActive = false;
+				__instance.spriteRenderer[0].sprite = comp.sprites[0];
+			}
 		}
 
 		[HarmonyPatch("VirtualUpdate")]
@@ -31,21 +38,24 @@ namespace BBPlusAnimations.Patches
 		{
 			// Animation
 			var comp = __instance.GetComponent<GenericAnimationExtraComponent>();
-			if (comp.isActive)
+			if (comp && comp.isActive)
 			{
 				__instance.spriteRenderer[0].sprite = comp.sprites[1 + (Mathf.FloorToInt(Time.fixedTime * __instance.TimeScale * 18f) % (comp.sprites.Length - 1))]; // minor () mistake for math
 
 				var comp2 = __instance.GetComponent<GottaSweepComponent>(); // Sweeping audio
-				comp2.cooldown -= __instance.TimeScale * Time.deltaTime;
-				if (comp2.cooldown < 0f)
+				if (comp2)
 				{
-					comp2.cooldown += cooldown;
-					if (Random.value <= chance)
+					comp2.cooldown -= __instance.TimeScale * Time.deltaTime;
+					if (comp2.cooldown < 0f)
 					{
-						___audMan.PlaySingle(comp2.aud_sweep);
-						comp2.cooldown /= Random.Range(2f, 5f);
-					}
+						comp2.cooldown += cooldown;
+						if (Random.value <= chance)
+						{
+							___audMan.PlaySingle(comp2.aud_sweep);
+							comp2.cooldown /= Random.Range(2f, 5f);
+						}
 
+					}
 				}
 			}
 

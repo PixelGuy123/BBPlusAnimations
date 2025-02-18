@@ -70,12 +70,15 @@ namespace BBPlusAnimations.Patches
 		[HarmonyPostfix]
 		private static void Pah(Cumulo __instance) 
 		{
-			__instance.GetComponent<PropagatedAudioManager>().PlaySingle(pah);
 			var comp = __instance.GetComponent<CloudyCopterExtraComp>();
-			comp.compToHold.transform.localPosition = Vector3.down * 10f;
-			var e = comp.compToHold.emission;
-			e.rateOverTimeMultiplier = 0f;
-			comp.shouldBlow = false;
+			if (comp)
+			{
+				__instance.GetComponent<PropagatedAudioManager>().PlaySingle(pah);
+				comp.compToHold.transform.localPosition = Vector3.down * 10f;
+				var e = comp.compToHold.emission;
+				e.rateOverTimeMultiplier = 0f;
+				comp.shouldBlow = false;
+			}
 		}
 
 		internal static SoundObject blowBeforeBlowing, pah;
@@ -87,7 +90,7 @@ namespace BBPlusAnimations.Patches
 		static void ChangeWindPosition(Cumulo ___cumulo)
 		{
 			var comp = ___cumulo.GetComponent<CloudyCopterExtraComp>();
-			if (comp.shouldBlow)
+			if (comp && comp.shouldBlow)
 			{
 				comp.compToHold.transform.position = ___cumulo.currentHall[Random.Range(0, ___cumulo.currentHall.Count)].CenterWorldPosition + new Vector3(Random.Range(-offset, offset), Random.Range(-offset, offset), Random.Range(-offset, offset));
 				var e = comp.compToHold.emission;

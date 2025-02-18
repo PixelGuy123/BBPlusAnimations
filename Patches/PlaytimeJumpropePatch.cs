@@ -10,13 +10,18 @@ namespace BBPlusAnimations.Patches
 	internal class PlaytimeJumpropePatch
 	{
 		[HarmonyPatch("End")]
-		private static void Prefix(Jumprope __instance, bool success) =>
-			__instance.GetComponent<GenericAnimationExtraComponent>().isActive = success;
+		private static void Prefix(Jumprope __instance, bool success)
+		{
+			var comp = __instance.GetComponent<GenericAnimationExtraComponent>();
+			if (comp)
+				comp.isActive = success;
+		}
 
 		[HarmonyPatch("Destroy")]
 		private static bool Prefix(Jumprope __instance, Animator ___animator, Canvas ___ropeCanvas, ref MovementModifier ___moveMod, Canvas ___textCanvas)
 		{
-			if (__instance.GetComponent<GenericAnimationExtraComponent>().isActive) // Quick fix to not show the animation on the wrong moment
+			var comp = __instance.GetComponent<GenericAnimationExtraComponent>();
+			if (comp && comp.isActive) // Quick fix to not show the animation on the wrong moment
 				return true;
 
 			__instance.player.plm.am.moveMods.Remove(___moveMod);

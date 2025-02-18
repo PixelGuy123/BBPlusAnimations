@@ -26,8 +26,10 @@ namespace BBPlusAnimations.Patches
 			var part = Object.Instantiate(appleParticles);
 			part.transform.SetParent(__instance.transform);
 			part.transform.localPosition = Vector3.up;
-		//	part.gameObject.SetActive(true);
-			__instance.GetComponent<BaldiEatAppleComponent>().particles = part;
+			//	part.gameObject.SetActive(true);
+			var comp = __instance.GetComponent<BaldiEatAppleComponent>();
+			if (comp)
+				comp.particles = part;
 		}
 
 		[HarmonyPatch(typeof(Baldi), "EatSound")]
@@ -45,8 +47,11 @@ namespace BBPlusAnimations.Patches
 			if (___time <= 0f)
 			{
 				var comp = ___baldi.GetComponent<BaldiEatAppleComponent>();
-				comp.particles.transform.SetParent(null, true);
-				comp.SetCooldownToDestroyParticles();
+				if (comp)
+				{
+					comp.particles.transform.SetParent(null, true);
+					comp.SetCooldownToDestroyParticles();
+				}
 			}
 			
 		}

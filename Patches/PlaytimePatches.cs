@@ -14,7 +14,7 @@ namespace BBPlusAnimations.Patches
 		static void PlaytimeHappyAnimation(Playtime ___playtime)
 		{
 			var comp = ___playtime.GetComponent<GenericAnimationExtraComponent>();
-			if (comp.isActive)
+			if (comp && comp.isActive)
 				___playtime.spriteRenderer[0].sprite = comp.sprites[Mathf.FloorToInt(Time.fixedTime * 17f * ___playtime.TimeScale) % comp.sprites.Length];
 		}
 
@@ -27,7 +27,9 @@ namespace BBPlusAnimations.Patches
 		[HarmonyPrefix]
 		static void PlaytimeIsSadOrNot(Playtime __instance, bool won)
 		{
-			__instance.GetComponent<GenericAnimationExtraComponent>().isActive = won;
+			var comp = __instance.GetComponent<GenericAnimationExtraComponent>();
+			if (comp)
+				comp.isActive = won;
 			__instance.animator.enabled = !won;
 		}
 	}

@@ -1,4 +1,5 @@
 ﻿using UnityEngine;
+using System.Collections.Generic;
 
 namespace BBPlusAnimations.Components
 {
@@ -13,13 +14,20 @@ namespace BBPlusAnimations.Components
 		public override void OnGenerationFinished()
 		{
 			base.OnGenerationFinished();
-			lightSwitches = new SpriteRenderer[room.doors.Count];
+
+			List<Door> actualStandardDoors = new(room.doors);
+			for (int i = 0; i < actualStandardDoors.Count; i++)
+				if (actualStandardDoors[i] is SwingDoor)
+					actualStandardDoors.RemoveAt(i--);
+			
+
+			lightSwitches = new SpriteRenderer[actualStandardDoors.Count];
 			for (int i = 0; i < lightSwitches.Length; i++)
 			{
-				Cell spot = room.doors[i].aTile.TileMatches(room) ? 
-					room.doors[i].aTile : room.doors[i].bTile;
-				Direction dir = room.doors[i].aTile.TileMatches(room) ?
-					room.doors[i].direction : room.doors[i].direction.GetOpposite();
+				Cell spot = actualStandardDoors[i].aTile.TileMatches(room) ?
+					actualStandardDoors[i].aTile : actualStandardDoors[i].bTile;
+				Direction dir = actualStandardDoors[i].aTile.TileMatches(room) ?
+					actualStandardDoors[i].direction : actualStandardDoors[i].direction.GetOpposite();
 
 				var lightSwitch = Instantiate(lightSwitchPre);
 				lightSwitch.transform.SetParent(spot.ObjectBase);

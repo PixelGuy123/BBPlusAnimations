@@ -26,7 +26,7 @@ namespace BBPlusAnimations.Patches
 		[HarmonyPatch(typeof(FirstPrize_Stunned), "Exit")]
 		[HarmonyPrefix]
 		static void RemoveParticles(FirstPrize ___firstPrize) =>
-			___firstPrize.GetComponentsInChildren<ParticleSystem>().Do(x => ___firstPrize.StartCoroutine(WaitForRemoval(x)));
+			___firstPrize.GetComponentsInChildren<ParticleSystem>()?.Do(x => ___firstPrize.StartCoroutine(WaitForRemoval(x)));
 		
 
 		static IEnumerator WaitForRemoval(ParticleSystem particle)
@@ -100,7 +100,7 @@ namespace BBPlusAnimations.Patches
 
 						crack.transform.rotation = f.transform.rotation;
 						crack.gameObject.SetActive(true);
-						crack.GetComponent<EmptyMonoBehaviour>().StartCoroutine(Timer(crack, 10f, f.ec));
+						crack.GetComponent<EmptyMonoBehaviour>()?.StartCoroutine(Timer(crack, 10f, f.ec));
 					}
 				})
 				)

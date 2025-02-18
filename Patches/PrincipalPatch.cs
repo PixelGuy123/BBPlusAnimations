@@ -23,8 +23,9 @@ namespace BBPlusAnimations.Patches
 				)
 			.InsertAndAdvance(
 				new(OpCodes.Ldarg_0),
+				new(OpCodes.Ldarg_0),
 				CodeInstruction.LoadField(typeof(Principal), "audMan"), // Not as hard as I thought, huh
-				Transpilers.EmitDelegate<System.Action<AudioManager>>((AudioManager audMan) => audMan.GetComponent<Principal>().Navigator.Entity.StartCoroutine(Animation(audMan.GetComponent<Principal>(), audMan)))) // Explicity as action, so it doesn't return a coroutine
+				Transpilers.EmitDelegate<System.Action<Principal, AudioManager>>((Principal pri, AudioManager audMan) => pri.Navigator.Entity.StartCoroutine(Animation(pri, audMan)))) // Explicity as action, so it doesn't return a coroutine
 
 			.InstructionEnumeration();
 
