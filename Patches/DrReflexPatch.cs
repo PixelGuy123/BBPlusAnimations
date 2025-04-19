@@ -5,9 +5,9 @@ using System.Reflection.Emit;
 
 namespace BBPlusAnimations.Patches
 {
-	[AnimationConditionalPatch("Dr Reflex hammer", "If True, Dr Reflex will spawn with a physic hammer in his position.")]
+	[AnimationConditionalPatch(ConfigEntryStorage.CATEGORY_NPCs, ConfigEntryStorage.NAME_REFLEX_WORLDHAMMER, ConfigEntryStorage.DESC_REFLEX_WORLDHAMMER)]
 	[HarmonyPatch(typeof(DrReflex))]
-	internal class DrReflexPatch
+	internal static class DrReflexPatch
 	{
 		[HarmonyPatch("Initialize")]
 		[HarmonyPrefix]

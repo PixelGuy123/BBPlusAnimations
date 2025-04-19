@@ -6,8 +6,8 @@ using PixelInternalAPI.Extensions;
 namespace BBPlusAnimations.Patches
 {
 	[HarmonyPatch(typeof(ITM_GrapplingHook))]
-	[AnimationConditionalPatch("Grappling hook fov changer", "If True, Grappling hooks will manipulate the player fov and fade out when despawning.")]
-	internal class GrapplingHookAnimation
+	[AnimationConditionalPatch(ConfigEntryStorage.CATEGORY_ITEMS, ConfigEntryStorage.NAME_GRAPPLINGHOOK_FOV, ConfigEntryStorage.DESC_GRAPPLINGHOOK_FOV)]
+	internal class GrapplingHookAnimation_FOV
 	{
 
 		[HarmonyPatch("Use")]
@@ -46,7 +46,6 @@ namespace BBPlusAnimations.Patches
 			___lineRenderer.enabled = false;
 			___pm.Am.moveMods.Remove(___moveMod);
 			___motorAudio.Stop();
-			__instance.StartCoroutine(comp.FadeAnimation(__instance, ___pm.ec));
 			return false;
 		}
 
@@ -60,5 +59,18 @@ namespace BBPlusAnimations.Patches
 
 		const float initialFov = -65f;
 
+	}
+	[HarmonyPatch(typeof(ITM_GrapplingHook))]
+	[AnimationConditionalPatch(ConfigEntryStorage.CATEGORY_ITEMS, ConfigEntryStorage.NAME_GRAPPLINGHOOK_FADEOUT, ConfigEntryStorage.DESC_GRAPPLINGHOOK_FADEOUT)]
+	internal static class GrapplingHookAnimation_FadeOut
+	{
+		[HarmonyPatch("End")]
+		[HarmonyPrefix]
+		private static bool EndIt(ITM_GrapplingHook __instance, PlayerManager ___pm, LineRenderer ___lineRenderer, ref MovementModifier ___moveMod, AudioSource ___motorAudio)
+		{
+			var comp = __instance.GetComponent<GrapplingHookFOVHolder>();
+			__instance.StartCoroutine(comp.FadeAnimation(__instance, ___pm.ec));
+			return false;
+		}
 	}
 }

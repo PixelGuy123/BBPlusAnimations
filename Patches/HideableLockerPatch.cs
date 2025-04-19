@@ -4,7 +4,7 @@ using HarmonyLib;
 namespace BBPlusAnimations.Patches
 {
 	[HarmonyPatch(typeof(HideableLocker))]
-	[AnimationConditionalPatch("Hideable locker opening animation", "If True, all hideable lockers (blue lockers) will slightly open if you aim at them.")]
+	[AnimationConditionalPatch(ConfigEntryStorage.CATEGORY_ENVIRONMENT, ConfigEntryStorage.NAME_HIDEABLELOCKER_INTERACTION, ConfigEntryStorage.DESC_HIDEABLELOCKER_INTERACTION)]
 	internal static class HideableLockerPatch
 	{
 		[HarmonyPatch("ClickableSighted")]

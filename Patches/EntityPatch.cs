@@ -3,11 +3,11 @@ using HarmonyLib;
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Reflection.Emit;
 using UnityEngine;
 
 namespace BBPlusAnimations.Patches
 {
-	[AnimationConditionalPatch("Entity unsquish animation", "If True, entities (npcs and player) will have an animation to indicate when they are unsquishing.")]
 	[HarmonyPatch(typeof(Entity))]
 	internal class EntityPatch
 	{
@@ -27,23 +27,30 @@ namespace BBPlusAnimations.Patches
 			new CodeMatcher(i)
 			.End()
 			.MatchBack(false,
-				new CodeMatch(CodeInstruction.Call(typeof(Entity), "Unsquish"))
+				new CodeMatch(OpCodes.Callvirt, AccessTools.Method(typeof(Entity), "Unsquish"))
 				)
 			.SetInstruction(Transpilers.EmitDelegate((Entity instance) =>
 			{
+				var co = instance.GetComponent<GenericAnimationExtraComponent>();
 				if (instance.BaseHeight >= instance.InternalHeight)
 				{
+					if (co)
+					{
+					if (co.runningAnimation != null)
+						instance.StopCoroutine(co.runningAnimation);
+					}
 					instance.Unsquish();
 					return;
 				}
-				instance.squishTime = unsquishingAnimationLimit + 15f;
-				var co = instance.GetComponent<GenericAnimationExtraComponent>();
+				instance.squishTime = ConfigEntryStorage.CFG_ENTITY_UNSQUISH_TIME_LIMIT.Value;
+				
 				if (co)
 				{
 					if (co.runningAnimation != null)
 						instance.StopCoroutine(co.runningAnimation);
 					co.runningAnimation = instance.StartCoroutine(Animation(instance));
 				}
+				
 			}))
 			.InstructionEnumeration();
 
@@ -51,7 +58,7 @@ namespace BBPlusAnimations.Patches
 		[HarmonyPrefix]
 		static void AntecipateTimer(Entity __instance, ref float time)
 		{
-			time -= unsquishingAnimationLimit;
+			time -= ConfigEntryStorage.CFG_ENTITY_UNSQUISH_TIME_LIMIT.Value;
 			var co = __instance.GetComponent<GenericAnimationExtraComponent>();
 			if (co && co.runningAnimation != null)
 				__instance.StopCoroutine(co.runningAnimation);
@@ -60,7 +67,7 @@ namespace BBPlusAnimations.Patches
 
 		static IEnumerator Animation(Entity entity)
 		{
-			float timer = unsquishingAnimationLimit;
+			float timer = ConfigEntryStorage.CFG_ENTITY_UNSQUISH_TIME_LIMIT.Value;
 			float factor = 0f;
 			float baseFactor = entity.BaseHeight / entity.InternalHeight;
 			var ec = entity.environmentController;
@@ -70,7 +77,7 @@ namespace BBPlusAnimations.Patches
 				timer -= ec.EnvironmentTimeScale * Time.deltaTime;
 				if (timer <= 0f)
 					break;
-				factor = baseFactor + Mathf.Abs(Mathf.Sin((unsquishingAnimationLimit - timer) * 7f) * 0.12f);
+				factor = baseFactor + Mathf.Abs(Mathf.Sin((ConfigEntryStorage.CFG_ENTITY_UNSQUISH_TIME_LIMIT.Value - timer) * 7f) * 0.12f);
 				entity.SetVerticalScale(factor);
 				yield return null;
 			}
@@ -87,13 +94,9 @@ namespace BBPlusAnimations.Patches
 			}
 
 			yield return null;
-
+			
 			entity.Unsquish();
 			yield break;
 		}
-
-
-
-		const float unsquishingAnimationLimit = 4f;
 	}
 }

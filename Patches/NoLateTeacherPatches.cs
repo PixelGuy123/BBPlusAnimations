@@ -8,14 +8,9 @@ using UnityEngine;
 namespace BBPlusAnimations.Patches
 {
 	[HarmonyPatch]
-	[AnimationConditionalPatch("Mrs Pomp unique look", "If True, Mrs Pomp will stare directly at you when reaching you and change your fov when screaming.")]
-	internal class NoLateTeacherPatches
+	[AnimationConditionalPatch(ConfigEntryStorage.CATEGORY_NPCs, ConfigEntryStorage.DESC_POMP_SIGHT, ConfigEntryStorage.DESC_POMP_SIGHT)]
+	internal static class MrsPompPatch_DeadSight
 	{
-		[HarmonyPatch(typeof(NoLateTeacher), "Attack")]
-		[HarmonyPrefix]
-		private static void SetFovToPlayer(PlayerManager player) =>
-			player.GetCustomCam().ShakeFOVAnimation(new ValueModifier(), intensity: 55f, shakeCooldown: 2f);
-
 		[HarmonyPatch(typeof(NoLateTeacher_Wander), "PlayerInSight")]
 		[HarmonyPostfix]
 		private static void SpotPlayer(NoLateTeacher ___pomp, PlayerManager player)
@@ -95,6 +90,17 @@ namespace BBPlusAnimations.Patches
 			teacher.sprite = comp.sprites[0];
 
 			yield break;
+		}
+	}
+	[HarmonyPatch]
+	internal static class MrsPompPatch_Scream
+	{
+		[HarmonyPatch(typeof(NoLateTeacher), "Attack")]
+		[HarmonyPrefix]
+		private static void SetFovToPlayer(PlayerManager player)
+		{
+			if (ConfigEntryStorage.CFG_POMP_FOVINTENSITY.Value > 15f)
+				player.GetCustomCam().ShakeFOVAnimation(new ValueModifier(), intensity: ConfigEntryStorage.CFG_POMP_FOVINTENSITY.Value, shakeCooldown: 2f);
 		}
 	}
 }

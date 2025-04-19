@@ -7,7 +7,7 @@ using UnityEngine;
 namespace BBPlusAnimations.Patches
 {
 	[HarmonyPatch(typeof(StandardDoor))]
-	[AnimationConditionalPatch("Door unique lock display", "If True, every standard door will have a lock if they are locked.")]
+	[AnimationConditionalPatch(ConfigEntryStorage.CATEGORY_ENVIRONMENT, ConfigEntryStorage.NAME_HIDEABLELOCKER_INTERACTION, ConfigEntryStorage.DESC_HIDEABLELOCKER_INTERACTION)]
 	public class StandardDoorPatches
 	{
 		[HarmonyPatch("Start")]

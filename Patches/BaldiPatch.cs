@@ -1,59 +1,57 @@
-﻿using BBPlusAnimations.Components;
+﻿using System.Collections;
 using HarmonyLib;
-using PixelInternalAPI.Components;
 using UnityEngine;
 
-namespace BBPlusAnimations.Patches
-{
-	[AnimationConditionalPatch("Baldi visible particles", "If True, Baldi will display particles for breaking the ruler and eating an apple.")]
-	[HarmonyPatch]
-	internal class BaldiPatch
-	{
-		[HarmonyPatch(typeof(Baldi), "SlapBreak")]
-		[HarmonyPostfix]
-		private static void BreakWithBeauty(Baldi __instance)
-		{
-			var p = Object.Instantiate(particle);
-			p.transform.position = __instance.transform.position;
-			p.ec = __instance.ec;
-			p.gameObject.SetActive(true);
-		}
-
-		[HarmonyPatch(typeof(Baldi), "TakeApple")]
-		[HarmonyPrefix]
-		static void GetAppleParticles(Baldi __instance)
-		{
-			var part = Object.Instantiate(appleParticles);
-			part.transform.SetParent(__instance.transform);
-			part.transform.localPosition = Vector3.up;
-			//	part.gameObject.SetActive(true);
-			var comp = __instance.GetComponent<BaldiEatAppleComponent>();
-			if (comp)
-				comp.particles = part;
-		}
-
-		[HarmonyPatch(typeof(Baldi), "EatSound")]
-		[HarmonyPostfix]
-		static void EatWithBeauty(Baldi __instance) =>
-			__instance.GetComponent<BaldiEatAppleComponent>().particles?.Emit(Random.Range(3, 25));
-
-		internal static TemporaryParticles particle;
-		internal static ParticleSystem appleParticles;
-
-		[HarmonyPatch(typeof(Baldi_Apple), "Update")]
-		[HarmonyPostfix]
-		static void CanDestroyParticles(Baldi ___baldi, float ___time)
-		{
-			if (___time <= 0f)
-			{
-				var comp = ___baldi.GetComponent<BaldiEatAppleComponent>();
-				if (comp)
-				{
-					comp.particles.transform.SetParent(null, true);
-					comp.SetCooldownToDestroyParticles();
-				}
-			}
-			
-		}
+namespace BBPlusAnimations.Patches;
+	
+[AnimationConditionalPatch(ConfigEntryStorage.CATEGORY_NPCs, ConfigEntryStorage.NAME_BALDI_PEEK_LOCKER, ConfigEntryStorage.DESC_BALDI_PEEK_LOCKER)]
+[HarmonyPatch]
+internal static class BaldiPatch_PeekInside{
+	[HarmonyPatch(typeof(HideableLockerBaldiInteraction), "Trigger")]
+	[HarmonyPostfix]
+	static void ForceBaldiAlignment(Baldi baldi, Transform ___targetTransform, HideableLocker ___locker){
+		baldi.StartCoroutine(
+			BaldiPeek(
+				baldi, 
+				(___targetTransform.position - ___targetTransform.forward * 2.15f).ZeroOutY(),
+				___locker
+				)
+			);
 	}
+
+	[HarmonyPatch(typeof(Baldi_OpenLocker), "Enter")]
+	[HarmonyPrefix]
+	static bool AvoidBaldiPraise(Baldi ___baldi){
+		___baldi.Navigator.SetSpeed(0f);
+		return false;
+	}
+
+
+	static IEnumerator BaldiPeek(Baldi bal, Vector3 expectedPosition, HideableLocker locker){
+		bal.volumeAnimator.enabled = false;
+		bal.animator.enabled = false;
+		float frame = 0f;
+		Vector3 ogRendererPosition = bal.spriteRenderer[0].transform.localPosition;
+		bal.spriteRenderer[0].transform.localPosition = Vector3.up;
+
+		yield return null;
+		bal.Navigator.Entity.Teleport(expectedPosition);
+
+		while (bal.transform.position.ZeroOutY() == expectedPosition && locker.playerInside){
+			frame += Time.deltaTime * fixedSpeed * bal.TimeScale;
+			if (frame >= bal_peek_sprites.Length){
+				break;
+			}
+			bal.spriteRenderer[0].sprite = bal_peek_sprites[Mathf.FloorToInt(frame)];
+			yield return null;
+		}
+		bal.spriteRenderer[0].transform.localPosition = ogRendererPosition;
+		bal.animator.enabled = true;
+	}
+
+	internal static Sprite[] bal_peek_sprites;
+
+	const float fixedSpeed = 24f;
+
 }
+

@@ -38,7 +38,7 @@ namespace BBPlusAnimations.Components
 
 				yield return null;
 			}
-			GrapplingHookAnimation.ActuallyEnd(g);
+			GrapplingHookAnimation_FOV.ActuallyEnd(g);
 
 			yield break;
 		}

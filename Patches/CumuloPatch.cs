@@ -5,9 +5,8 @@ using UnityEngine;
 
 namespace BBPlusAnimations.Patches
 {
-	[AnimationConditionalPatch("Cloudy Copter blow animation", "If True, Cloudy Copter will have an unique animation for blowing in and out.")]
 	[HarmonyPatch(typeof(Cumulo))]
-	internal class CumuloPatch
+	internal static class CumuloPatch
 	{
 		[HarmonyPatch("Blow")]
 		[HarmonyReversePatch(HarmonyReversePatchType.Original)]
@@ -20,7 +19,12 @@ namespace BBPlusAnimations.Patches
 		{
 			var audman = __instance.GetComponent<PropagatedAudioManager>();
 			audman.PlaySingle(blowBeforeBlowing);
-			__instance.StartCoroutine(Animation(__instance, __instance.spriteBase.transform.Find("Sprite"), audman));
+
+			if (ConfigEntryStorage.CFG_NPC_CUMULO_INHALE.Value)
+				__instance.StartCoroutine(Animation(__instance, __instance.spriteBase.transform.Find("Sprite"), audman));
+			else if (ConfigEntryStorage.CFG_NPC_CUMULO_WIND_PARTICLES.Value && __instance.TryGetComponent<CloudyCopterExtraComp>(out var cc))
+				cc.shouldBlow = true;
+
 			return false;
 		}
 
@@ -46,7 +50,8 @@ namespace BBPlusAnimations.Patches
 
 				yield return null;
 				ActualBlow(c);
-				c.GetComponent<CloudyCopterExtraComp>().shouldBlow = true;
+				if (ConfigEntryStorage.CFG_NPC_CUMULO_WIND_PARTICLES.Value && c.TryGetComponent<CloudyCopterExtraComp>(out var cc))
+					cc.shouldBlow = true;
 			}
 			else audman.FlushQueue(true);
 
@@ -73,10 +78,13 @@ namespace BBPlusAnimations.Patches
 			var comp = __instance.GetComponent<CloudyCopterExtraComp>();
 			if (comp)
 			{
+				if (ConfigEntryStorage.CFG_NPC_CUMULO_EXHALE.Value)
 				__instance.GetComponent<PropagatedAudioManager>().PlaySingle(pah);
+				if (comp.compToHold){
 				comp.compToHold.transform.localPosition = Vector3.down * 10f;
 				var e = comp.compToHold.emission;
 				e.rateOverTimeMultiplier = 0f;
+				}
 				comp.shouldBlow = false;
 			}
 		}

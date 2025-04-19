@@ -5,8 +5,8 @@ using UnityEngine;
 namespace BBPlusAnimations.Patches
 {
 	[HarmonyPatch(typeof(GottaSweep))]
-	[AnimationConditionalPatch("Gotta sweep sweeping", "If True, Gotta Sweep will display an unique *sweeping* animation.")]
-	internal class GottaSweepPatches
+	[AnimationConditionalPatch(ConfigEntryStorage.CATEGORY_NPCs, ConfigEntryStorage.NAME_SWEEP_ANIMATION, ConfigEntryStorage.DESC_SWEEP_ANIMATION)]
+	internal static class GottaSweepPatch_Animation
 	{
 		[HarmonyPatch("StartSweeping")]
 		[HarmonyPrefix]
@@ -15,9 +15,6 @@ namespace BBPlusAnimations.Patches
 			var anim = __instance.GetComponent<GenericAnimationExtraComponent>();
 			if (anim)
 				anim.isActive = true;
-			var sweep = __instance.GetComponent<GottaSweepComponent>();
-			if (sweep)
-				sweep.cooldown = cooldown;
 		}
 
 		[HarmonyPatch("StopSweeping")]
@@ -30,6 +27,22 @@ namespace BBPlusAnimations.Patches
 				comp.isActive = false;
 				__instance.spriteRenderer[0].sprite = comp.sprites[0];
 			}
+		}
+
+		
+	}
+
+	[HarmonyPatch(typeof(GottaSweep))]
+	[AnimationConditionalPatch(ConfigEntryStorage.CATEGORY_NPCs, ConfigEntryStorage.NAME_SWEEP_SWEEPSOUND, ConfigEntryStorage.DESC_SWEEP_SWEEPSOUND)]
+	internal static class GottaSweepPatch_SweepSound
+	{
+		[HarmonyPatch("StartSweeping")]
+		[HarmonyPrefix]
+		private static void EnableIt(GottaSweep __instance)
+		{
+			var sweep = __instance.GetComponent<GottaSweepComponent>();
+			if (sweep)
+				sweep.cooldown = cooldown;
 		}
 
 		[HarmonyPatch("VirtualUpdate")]
@@ -62,6 +75,6 @@ namespace BBPlusAnimations.Patches
 		}
 
 		const float cooldown = 10f;
-		const float chance = 0.55f;
+		const float chance = 0.675f;
 	}
 }

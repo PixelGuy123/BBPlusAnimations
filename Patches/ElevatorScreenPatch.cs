@@ -7,7 +7,7 @@ using UnityEngine.UI;
 
 namespace BBPlusAnimations.Patches
 {
-	[AnimationConditionalPatch("Enable hand animation", "If True, hands will be displayed on screen when performing certain interactions.")]
+	[AnimationConditionalPatch(ConfigEntryStorage.CATEGORY_UI, ConfigEntryStorage.NAME_HANDANIM_ELEVATOR, ConfigEntryStorage.DESC_HANDANIM_ELEVATOR)]
 	[HarmonyPatch(typeof(ElevatorScreen))]
 	internal static class ElevatorScreenPatch
 	{

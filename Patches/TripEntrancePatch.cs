@@ -7,7 +7,7 @@ using PixelInternalAPI.Extensions;
 
 namespace BBPlusAnimations.Patches
 {
-	[AnimationConditionalPatch("Bus go away", "If True, once you leave the field trip winning, the bus goes away by itself.")]
+	[AnimationConditionalPatch(ConfigEntryStorage.CATEGORY_ENVIRONMENT, ConfigEntryStorage.NAME_TRIPENTRANCE_ANIMATION, ConfigEntryStorage.DESC_TRIPENTRANCE_ANIMATION)]
 	[HarmonyPatch(typeof(FieldTripEntranceRoomFunction))]
 	internal class TripEntrancePatch
 	{

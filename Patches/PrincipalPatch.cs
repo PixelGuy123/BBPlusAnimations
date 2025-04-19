@@ -6,9 +6,9 @@ using System.Collections;
 
 namespace BBPlusAnimations.Patches
 {
-	[AnimationConditionalPatch("Principal visual changes", "If True, Principal will display an animation for whistling and sending you to detention.")]
+    [AnimationConditionalPatch(ConfigEntryStorage.CATEGORY_NPCs, ConfigEntryStorage.NAME_PRINCIPAL_WHISTLE_ANIMATION, ConfigEntryStorage.DESC_PRINCIPAL_WHISTLE_ANIMATION)]
 	[HarmonyPatch(typeof(Principal))]
-	internal class PrincipalPatch
+	internal class PrincipalWhistlePatch
 	{
 		[HarmonyPatch("WhistleChance")]
 		[HarmonyTranspiler]
@@ -24,9 +24,8 @@ namespace BBPlusAnimations.Patches
 			.InsertAndAdvance(
 				new(OpCodes.Ldarg_0),
 				new(OpCodes.Ldarg_0),
-				CodeInstruction.LoadField(typeof(Principal), "audMan"), // Not as hard as I thought, huh
-				Transpilers.EmitDelegate<System.Action<Principal, AudioManager>>((Principal pri, AudioManager audMan) => pri.Navigator.Entity.StartCoroutine(Animation(pri, audMan)))) // Explicity as action, so it doesn't return a coroutine
-
+				CodeInstruction.LoadField(typeof(Principal), "audMan"),
+				Transpilers.EmitDelegate<System.Action<Principal, AudioManager>>((pri, audMan) => pri.Navigator.Entity.StartCoroutine(Animation(pri, audMan))))
 			.InstructionEnumeration();
 
 		static IEnumerator Animation(Principal p, AudioManager man)
@@ -34,7 +33,7 @@ namespace BBPlusAnimations.Patches
 			bool turn = false;
 			float scale = 1f;
 			var target = p.spriteRenderer[0].transform;
-			yield return null; // Wait for audio to play
+			yield return null;
 
 			while (man.QueuedAudioIsPlaying)
 			{
@@ -58,7 +57,6 @@ namespace BBPlusAnimations.Patches
 				}
 
 				target.localScale = Vector3.one * scale;
-
 				yield return null;
 			}
 
@@ -72,34 +70,7 @@ namespace BBPlusAnimations.Patches
 			}
 
 			target.localScale = Vector3.one;
-
 			yield break;
 		}
-
-		[HarmonyPatch("SendToDetention")]
-		[HarmonyPrefix]
-		static void CoolDetentionAnimation(Principal __instance)
-		{
-			if (__instance.ec.offices.Count > 0)
-				__instance.StartCoroutine(DetentionAnimation(__instance.spriteRenderer[0], __instance));
-		}
-
-		static IEnumerator DetentionAnimation(SpriteRenderer renderer, Principal p)
-		{
-			float time = 3f;
-			while (time > 0f)
-			{
-				time -= p.TimeScale * Time.deltaTime;
-				renderer.sprite = sprites[1 + (Mathf.FloorToInt(Time.fixedTime * 8f * p.TimeScale) % (sprites.Length - 1))];
-				yield return null;
-			}
-			renderer.sprite = sprites[0];
-
-			yield break;
-		}
-
-		internal static Sprite[] sprites;
-
-
 	}
 }

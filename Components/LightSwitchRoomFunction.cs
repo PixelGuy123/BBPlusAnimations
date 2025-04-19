@@ -15,7 +15,7 @@ namespace BBPlusAnimations.Components
 		{
 			base.OnGenerationFinished();
 
-			List<Door> actualStandardDoors = new(room.doors);
+			List<Door> actualStandardDoors = [.. room.doors];
 			for (int i = 0; i < actualStandardDoors.Count; i++)
 				if (actualStandardDoors[i] is SwingDoor)
 					actualStandardDoors.RemoveAt(i--);

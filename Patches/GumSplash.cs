@@ -10,8 +10,8 @@ using UnityEngine.UI;
 namespace BBPlusAnimations.Patches
 {
 	[HarmonyPatch(typeof(Gum))]
-	[AnimationConditionalPatch("Gum splash", "If True, Beans gum will literally splash when hitting a wall.")]
-	public class GumSplash
+	[AnimationConditionalPatch(ConfigEntryStorage.CATEGORY_ENVIRONMENT, ConfigEntryStorage.NAME_GUM_SPLASH, ConfigEntryStorage.DESC_GUM_SPLASH)]
+	public static class GumSplash_WallSplash
 	{
 		[HarmonyPatch("OnEntityMoveCollision")]
 		[HarmonyPrefix]
@@ -85,23 +85,6 @@ namespace BBPlusAnimations.Patches
 		public static Transform gumSplash;
 		public static SoundObject splash;
 
-		[HarmonyPatch("EntityTriggerEnter")]
-		[HarmonyTranspiler]
-		private static IEnumerable<CodeInstruction> AnimationUponPlayerHit(IEnumerable<CodeInstruction> i) =>
-			new CodeMatcher(i)
-			.MatchForward(false, 
-				new(OpCodes.Ldarg_0),
-				new(CodeInstruction.LoadField(typeof(Gum), "beans")),
-				new(OpCodes.Callvirt, AccessTools.Method(typeof(Beans), "HitPlayer"))
-				)
-			.InsertAndAdvance(
-				new(OpCodes.Ldarg_0),
-				new(OpCodes.Ldarg_0),
-				CodeInstruction.LoadField(typeof(Gum), "canvas"),
-				Transpilers.EmitDelegate<System.Action<Gum, Canvas>>((x, y) => x.StartCoroutine(OverlayAnimation(y, x.ec)))
-				)
-			.InstructionEnumeration();
-
 		[HarmonyPatch("Timer", MethodType.Enumerator)]
 		[HarmonyTranspiler]
 		private static IEnumerable<CodeInstruction> DeleteThatCutVariable(IEnumerable<CodeInstruction> i) =>
@@ -115,16 +98,48 @@ namespace BBPlusAnimations.Patches
 			.SetAndAdvance(OpCodes.Nop, null) // AGAIN THIS NOP, WHY CAN'T I REMOVE INSTRUCTIONS
 			.SetAndAdvance(OpCodes.Nop, null)
 			.InstructionEnumeration();
+		
+
+		[HarmonyPatch("Hide")]
+		[HarmonyPostfix]
+		private static void SetCutFalse(ref bool ___cut) =>
+			___cut = false;
+		
+	}
+
+	[HarmonyPatch(typeof(Gum))]
+	internal static class GumSplash_GumCoverScreen
+	{
+		[HarmonyPatch("EntityTriggerEnter")]
+		[HarmonyTranspiler]
+		private static IEnumerable<CodeInstruction> AnimationUponPlayerHit(IEnumerable<CodeInstruction> i) =>
+			new CodeMatcher(i)
+			.MatchForward(false,
+				new(OpCodes.Ldarg_0),
+				new(CodeInstruction.LoadField(typeof(Gum), "beans")),
+				new(OpCodes.Callvirt, AccessTools.Method(typeof(Beans), "HitPlayer"))
+				)
+			.InsertAndAdvance(
+				new(OpCodes.Ldarg_0),
+				new(OpCodes.Ldarg_0),
+				CodeInstruction.LoadField(typeof(Gum), "canvas"),
+				Transpilers.EmitDelegate<System.Action<Gum, Canvas>>((x, y) =>
+				{
+					if (ConfigEntryStorage.CFG_GUM_FULLCOVERCOOL_COOL.Value > 0f)
+						x.StartCoroutine(OverlayAnimation(y, x.ec));
+				})
+				)
+			.InstructionEnumeration();
 
 		[HarmonyPatch("Hide")]
 		[HarmonyTranspiler]
 		private static IEnumerable<CodeInstruction> HideGumCover(IEnumerable<CodeInstruction> i, ILGenerator g) =>
-		
+
 			new CodeMatcher(i, g)
 			.Start()
 			.InsertAndAdvance()
 
-			.MatchForward(false, 
+			.MatchForward(false,
 				new(OpCodes.Ldarg_0),
 				new(CodeInstruction.LoadField(typeof(Gum), "entity")),
 				new(OpCodes.Ldc_I4_0),
@@ -148,29 +163,31 @@ namespace BBPlusAnimations.Patches
 				CodeInstruction.LoadField(typeof(Gum), "entity"),
 				new(OpCodes.Ldarg_0),
 				new(CodeInstruction.LoadField(typeof(Gum), "cut")),
-				Transpilers.EmitDelegate<System.Action<Gum, Canvas, Entity, bool>>((x, y, z, u) => x.StartCoroutine(OverlayDisappearAnimation(y, x.ec, z, u)))
+				Transpilers.EmitDelegate<System.Action<Gum, Canvas, Entity, bool>>((x, y, z, u) =>
+				{
+					if (ConfigEntryStorage.CFG_GUM_FADEOUTSPEED_SPEED.Value > 0f)
+						x.StartCoroutine(OverlayDisappearAnimation(y, x.ec, z, u));
+					else
+					{
+						y.gameObject.SetActive(false);
+						z.SetActive(false);
+					}
+				})
 				) // Now add new one
 			.InstructionEnumeration();
-		
-
-		[HarmonyPatch("Hide")]
-		[HarmonyPostfix]
-		private static void SetCutFalse(ref bool ___cut) =>
-			___cut = false;
-		
 
 		static IEnumerator OverlayAnimation(Canvas c, EnvironmentController ec)
 		{
 			var img = c.GetComponentInChildren<Image>();
 			img.sprite = sprites[0];
 
-			float cooldown = 2f;
+			float cooldown = ConfigEntryStorage.CFG_GUM_FULLCOVERCOOL_COOL.Value;
 			while (cooldown > 0f)
 			{
 				cooldown -= ec.EnvironmentTimeScale * Time.deltaTime;
 				yield return null;
 			}
-			
+
 			float frame = 0f;
 			int idx;
 			while (true)
@@ -201,12 +218,12 @@ namespace BBPlusAnimations.Patches
 			while (true)
 			{
 				var co = c.GetColor();
-				co.a -= ec.EnvironmentTimeScale * Time.deltaTime;
+				co.a -= ec.EnvironmentTimeScale * Time.deltaTime * ConfigEntryStorage.CFG_GUM_FADEOUTSPEED_SPEED.Value;
 				if (co.a <= 0f)
 					break;
 
 				c.SetColor(co);
-				
+
 				yield return null;
 			}
 

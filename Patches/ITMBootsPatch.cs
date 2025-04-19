@@ -6,9 +6,9 @@ using BBPlusAnimations.Components;
 
 namespace BBPlusAnimations.Patches
 {
-	[AnimationConditionalPatch("Boots walking noises", "If True, Big OI Boots will do squeaking noises.")]
+	[AnimationConditionalPatch(ConfigEntryStorage.CATEGORY_ITEMS, ConfigEntryStorage.NAME_BOOTS_WALK, ConfigEntryStorage.DESC_BOOTS_WALK)]
 	[HarmonyPatch(typeof(ITM_Boots), "Timer", MethodType.Enumerator)]
-	internal class ITMBootsPatch
+	internal static class ITMBootsPatch
 	{
 		static IEnumerable<CodeInstruction> Transpiler(IEnumerable<CodeInstruction> i) =>
 			new CodeMatcher(i)

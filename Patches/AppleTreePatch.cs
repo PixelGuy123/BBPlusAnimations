@@ -6,9 +6,8 @@ using UnityEngine;
 
 namespace BBPlusAnimations.Patches
 {
-	[AnimationConditionalPatch("Apple tree drop", "If True, each time a tree is forced to drop an item, it will drop in a linear slide.")]
 	[HarmonyPatch(typeof(AppleTree), "OnTriggerEnter")]
-	internal class AppleTreePatch
+	internal static class AppleTreePatch
 	{
 		private static IEnumerable<CodeInstruction> Transpiler(IEnumerable<CodeInstruction> i) =>
 			new CodeMatcher(i)
@@ -35,7 +34,18 @@ namespace BBPlusAnimations.Patches
 				new(OpCodes.Ldarg_0),
 				new(OpCodes.Ldarg_0),
 				CodeInstruction.LoadField(typeof(AppleTree), "apple"),
-				Transpilers.EmitDelegate<System.Action<AppleTree, Transform>>((x, y) => x.StartCoroutine(Animation(y)))
+				Transpilers.EmitDelegate<System.Action<AppleTree, Transform>>((x, y) =>
+				{
+					if (ConfigEntryStorage.CFG_APPLETREE_APPLE_DROP_SPEED.Value <= 0f)
+					{
+						Vector3 pos = y.position;
+						pos.y = down;
+						y.position = pos;
+						return;
+					}
+
+					x.StartCoroutine(Animation(y));
+				})
 				)
 
 			.InstructionEnumeration();
@@ -47,7 +57,7 @@ namespace BBPlusAnimations.Patches
 			Vector3 ogPos = apple.transform.position;
 			while (true)
 			{
-				speed += Time.deltaTime * Singleton<BaseGameManager>.Instance.Ec.EnvironmentTimeScale;
+				speed += Time.deltaTime * Singleton<BaseGameManager>.Instance.Ec.EnvironmentTimeScale * ConfigEntryStorage.CFG_APPLETREE_APPLE_DROP_SPEED.Value;
 
 				posOffset += speed;
 				if (posOffset >= down - 0.01f)

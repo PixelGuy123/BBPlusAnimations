@@ -7,49 +7,18 @@ using System.Collections;
 namespace BBPlusAnimations.Patches
 {
 	[HarmonyPatch(typeof(Bully))]
-	[AnimationConditionalPatch("Bully gradual disappearance", "If True, Bully will fade out each time he wants to.")]
-	internal class BullyPatch
+	[AnimationConditionalPatch(ConfigEntryStorage.CATEGORY_NPCs, ConfigEntryStorage.NAME_BULLY_HIDE, ConfigEntryStorage.DESC_BULLY_HIDE)]
+	internal static class BullyPatch_GradualHide
 	{
-		internal static Vector3 GetPos(float degrees)
-		{
-#pragma warning disable Harmony003 // Harmony non-ref patch parameters modified
-			degrees *= Mathf.Deg2Rad; // darn radians
-#pragma warning restore Harmony003 // Harmony non-ref patch parameters modified
-			return new((Mathf.Cos(degrees) * 3.27f) + (-Mathf.Sin(degrees) * 1.79f), (Mathf.Cos(degrees) * 1.79f) + (Mathf.Sin(degrees) * 3.27f)); // x = 3.27f y = 1.79f
-			// This should make it work with any given rotation
-		}
-
-		[HarmonyPatch("StealItem")]
-		[HarmonyPostfix]
-		static void MakeBullyHappy(Bully __instance, SpriteRenderer ___spriteToHide, List<int> ___slotsToSteal)
-		{
-			if (___slotsToSteal.Count > 0)
-			{
-				var co = __instance.GetComponent<BullyBlinkComponent>();
-				if (!co)
-					return;
-
-				co.blink = false;
-				co.itemRenderer.sprite = ItemManagerPatch.lastRemovedItem.itemSpriteLarge;
-
-				var block = new MaterialPropertyBlock();
-				___spriteToHide.GetPropertyBlock(block);
-				co.itemRenderer.SetSpriteRotation(block.GetFloat("_SpriteRotation"));
-				co.itemRenderer.transform.localPosition = GetPos(block.GetFloat("_SpriteRotation"));
-
-				co.itemRenderer.enabled = true;
-			}
-		}
-
 		[HarmonyPatch("Hide")]
 		[HarmonyPostfix]
-		static void BullyDisappearRapid(Bully __instance, SpriteRenderer ___spriteToHide)
+		static void BullyDisappearRapid(Bully __instance)
 		{
 			var co = __instance.GetComponent<BullyBlinkComponent>();
 			if (co)
 			{
-				___spriteToHide.enabled = true;
-				__instance.StartCoroutine(HideAnimation(__instance, ___spriteToHide, co));
+				__instance.spriteRenderer[0].enabled = true;
+				__instance.StartCoroutine(HideAnimation(__instance, __instance.spriteRenderer[0], co));
 			}
 		}
 
@@ -85,5 +54,41 @@ namespace BBPlusAnimations.Patches
 			yield break;
 		}
 			
+	}
+
+	[HarmonyPatch(typeof(Bully))]
+	[AnimationConditionalPatch(ConfigEntryStorage.CATEGORY_NPCs, ConfigEntryStorage.NAME_BULLY_STEALITEM, ConfigEntryStorage.NAME_BULLY_STEALITEM)]
+	internal static class BullyPatch_StealItem
+	{
+		internal static Vector3 GetPos(float degrees)
+		{
+#pragma warning disable Harmony003 // Harmony non-ref patch parameters modified
+			degrees *= Mathf.Deg2Rad; // darn radians
+#pragma warning restore Harmony003 // Harmony non-ref patch parameters modified
+			return new((Mathf.Cos(degrees) * 3.27f) + (-Mathf.Sin(degrees) * 1.79f), (Mathf.Cos(degrees) * 1.79f) + (Mathf.Sin(degrees) * 3.27f)); // x = 3.27f y = 1.79f
+																																				   // This should make it work with any given rotation
+		}
+
+		[HarmonyPatch("StealItem")]
+		[HarmonyPostfix]
+		static void MakeBullyHappy(Bully __instance, SpriteRenderer ___spriteToHide, List<int> ___slotsToSteal)
+		{
+			if (___slotsToSteal.Count > 0)
+			{
+				var co = __instance.GetComponent<BullyBlinkComponent>();
+				if (!co)
+					return;
+
+				co.blink = false;
+				co.itemRenderer.sprite = ItemManagerPatch.lastRemovedItem.itemSpriteLarge;
+
+				var block = new MaterialPropertyBlock();
+				___spriteToHide.GetPropertyBlock(block);
+				co.itemRenderer.SetSpriteRotation(block.GetFloat("_SpriteRotation"));
+				co.itemRenderer.transform.localPosition = GetPos(block.GetFloat("_SpriteRotation"));
+
+				co.itemRenderer.enabled = true;
+			}
+		}
 	}
 }

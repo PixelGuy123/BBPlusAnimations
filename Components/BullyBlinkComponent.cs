@@ -55,6 +55,8 @@ namespace BBPlusAnimations.Components
 		[SerializeField]
 		internal SpriteRenderer itemRenderer;
 
+		internal MaterialPropertyBlock itemRendererBlock = new(), bullyPropertyBlock = new();
+
 		internal static Sprite bullyBlink, bullyCatch;
 
 		internal bool blink = true;

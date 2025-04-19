@@ -4,9 +4,9 @@ using UnityEngine;
 
 namespace BBPlusAnimations.Patches
 {
-	[AnimationConditionalPatch("Chalkles visible laughter", "If True, Chalkles will have an unique animation for laughing.")]
+	[AnimationConditionalPatch(ConfigEntryStorage.CATEGORY_NPCs, ConfigEntryStorage.NAME_CHALKLES_LAUGHTER, ConfigEntryStorage.DESC_CHALKLES_LAUGHTER)]
 	[HarmonyPatch(typeof(ChalkFace))]
-	internal class ChalklesPatches
+	internal static class ChalklesPatches
 	{
 		[HarmonyPatch("Initialize")]
 		[HarmonyPrefix]

@@ -3,11 +3,10 @@ using HarmonyLib;
 
 namespace BBPlusAnimations.Patches
 {
-	[AnimationConditionalPatch("Notebook pickup noise", "If True, notebooks will play a secondary noise when being picked up.")]
+	[AnimationConditionalPatch(ConfigEntryStorage.CATEGORY_MISC, ConfigEntryStorage.NAME_NOTEBOOK_SOUND, ConfigEntryStorage.DESC_NOTEBOOK_SOUND)]
 	[HarmonyPatch(typeof(Notebook), "Clicked", [typeof(int)])]
-	internal class NotebookPatch
+	internal static class NotebookPatch
 	{
-
 		[HarmonyPrefix]
 		static void NotebookNoise() =>
 			Singleton<CoreGameManager>.Instance.audMan.PlaySingle(audPickNotebook);
@@ -15,9 +14,9 @@ namespace BBPlusAnimations.Patches
 		internal static SoundObject audPickNotebook;
 	}
 
-	[AnimationConditionalPatch("Enable hand animation", "If True, hands will be displayed on screen when performing certain interactions.")]
+	[AnimationConditionalPatch(ConfigEntryStorage.CATEGORY_MISC, ConfigEntryStorage.NAME_HANDANIM_NOTEBOOK, ConfigEntryStorage.DESC_HANDANIM_NOTEBOOK)]
 	[HarmonyPatch(typeof(Notebook), "Clicked", [typeof(int)])]
-	internal class NotebookPatchForHands
+	internal static class NotebookPatchForHands
 	{
 		[HarmonyPrefix]
 		static void PickupHand(int player) =>

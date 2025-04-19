@@ -4,9 +4,9 @@ using UnityEngine;
 
 namespace BBPlusAnimations.Patches
 {
-	[AnimationConditionalPatch("Elevator gate hit", "If True, the elevator gate will bounce a bit up after hitting.")]
+	[AnimationConditionalPatch(ConfigEntryStorage.CATEGORY_ENVIRONMENT, ConfigEntryStorage.NAME_ELEVATOR_GATEHIT, ConfigEntryStorage.DESC_ELEVATOR_GATEHIT)]
 	[HarmonyPatch(typeof(Elevator), "Close")]
-	internal class ElevatorPatch
+	internal static class ElevatorPatch
 	{
 		private static void Postfix(Elevator __instance, Door ___door, Animator ___animator) =>
 			__instance.StartCoroutine(Animation(__instance.transform.Find("Gate"), ___door.ec, ___animator));
@@ -17,7 +17,7 @@ namespace BBPlusAnimations.Patches
 				yield return null;
 			a.enabled = false;
 
-			float speed = 0.05f;
+			float speed = 0.065f;
 			Vector3 pos = i.transform.localPosition;
 
 			while (true)

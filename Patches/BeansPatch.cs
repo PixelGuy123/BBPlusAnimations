@@ -5,7 +5,7 @@ using System.Collections;
 
 namespace BBPlusAnimations.Patches
 {
-	[AnimationConditionalPatch("Beans visible worry", "If True, Beans will display an unique animation after blowing a gum.")]
+	[AnimationConditionalPatch(ConfigEntryStorage.CATEGORY_NPCs, ConfigEntryStorage.NAME_BEANS_WORRY, ConfigEntryStorage.DESC_BEANS_WORRY)]
 	[HarmonyPatch(typeof(Beans))]
 	internal static class BeansPatch
 	{

@@ -7,9 +7,9 @@ using UnityEngine;
 
 namespace BBPlusAnimations.Patches
 {
-	[AnimationConditionalPatch("1st Prize smoke and wall hit", "If True, 1st Prize will emit smoke when cut and will show a particle of a broken wall when slamming into one.")]
+	[AnimationConditionalPatch(ConfigEntryStorage.CATEGORY_NPCs, ConfigEntryStorage.NAME_FIRSTPRIZE_SMOKE, ConfigEntryStorage.DESC_FIRSTPRIZE_SMOKE)]
 	[HarmonyPatch]
-	public class FirstPrizePatches
+	internal static class FirstPrizePatch_Smoking
 	{
 		[HarmonyPatch(typeof(FirstPrize_Stunned), "Enter")]
 		[HarmonyPrefix]
@@ -27,7 +27,7 @@ namespace BBPlusAnimations.Patches
 		[HarmonyPrefix]
 		static void RemoveParticles(FirstPrize ___firstPrize) =>
 			___firstPrize.GetComponentsInChildren<ParticleSystem>()?.Do(x => ___firstPrize.StartCoroutine(WaitForRemoval(x)));
-		
+
 
 		static IEnumerator WaitForRemoval(ParticleSystem particle)
 		{
@@ -36,47 +36,28 @@ namespace BBPlusAnimations.Patches
 
 			while (particle.particleCount > 0)
 				yield return null;
-			
+
 			Object.Destroy(particle.gameObject);
 
 			yield break;
 		}
-		
+
 
 		internal static ParticleSystem smokes;
+	}
 
+	[AnimationConditionalPatch(ConfigEntryStorage.CATEGORY_NPCs, ConfigEntryStorage.NAME_FIRSTPRIZE_WALLHIT, ConfigEntryStorage.DESC_FIRSTPRIZE_WALLHIT)]
+	[HarmonyPatch]
+	internal static class FirstPrizePatch_WallCrack
+	{
 		[HarmonyPatch(typeof(FirstPrize_Active), "Update")]
 		[HarmonyTranspiler]
-		static IEnumerable<CodeInstruction> SaySorry(IEnumerable<CodeInstruction> i, ILGenerator ge) =>
+		static IEnumerable<CodeInstruction> WallHit(IEnumerable<CodeInstruction> i, ILGenerator ge) =>
 			new CodeMatcher(i, ge)
-			.End()
-			// ************* Make Firstprize say Sorry **************
-			.MatchBack(false,
-				new(OpCodes.Ldarg_0),
-				new(OpCodes.Ldflda, AccessTools.Field(typeof(FirstPrize_Active), "raycastHit")),
-				new(OpCodes.Call, AccessTools.PropertyGetter(typeof(RaycastHit), "transform")),
-				new(OpCodes.Callvirt, AccessTools.Method(typeof(Component), "GetComponent", [], [typeof(Window)])),
-				new(OpCodes.Ldc_I4_1),
-				new(OpCodes.Callvirt, AccessTools.Method(typeof(Window), "Break", [typeof(bool)]))
-				)
-			.InsertAndAdvance(
-				new(OpCodes.Ldarg_0),
-				new(OpCodes.Ldflda, AccessTools.Field(typeof(FirstPrize_Active), "raycastHit")),
-				new(OpCodes.Call, AccessTools.PropertyGetter(typeof(RaycastHit), "transform")),
-				new(OpCodes.Callvirt, AccessTools.Method(typeof(Component), "GetComponent", [], [typeof(Window)])),
-				new(OpCodes.Ldarg_0),
-				CodeInstruction.LoadField(typeof(FirstPrize_StateBase), "firstPrize"),
-				Transpilers.EmitDelegate<System.Action<Window, FirstPrize>>((w, f) =>
-				{
-					if (!w.broken)
-						f.audMan.QueueAudio(audSorry, true);
-					
-				})
-				)
 
 			.End()
 			// *********** Wall Slam with cracks *************
-			.MatchBack(false, 
+			.MatchBack(false,
 				new(OpCodes.Ldarg_0),
 				new(CodeInstruction.LoadField(typeof(FirstPrize_StateBase), "firstPrize")),
 				new(CodeInstruction.LoadField(typeof(FirstPrize), "audMan")),
@@ -94,11 +75,11 @@ namespace BBPlusAnimations.Patches
 					{
 						var crack = Object.Instantiate(cracks);
 
-						Vector3 pos = hit.transform.position - f.transform.forward * 0.03f;
+						Vector3 pos = hit.transform.position - (f.transform.forward * 0.03f);
 						pos.y = f.transform.position.y;
 						crack.transform.position = pos;
 
-						crack.transform.rotation = f.transform.rotation;
+						crack.transform.forward = hit.normal;
 						crack.gameObject.SetActive(true);
 						crack.GetComponent<EmptyMonoBehaviour>()?.StartCoroutine(Timer(crack, 10f, f.ec));
 					}
@@ -130,8 +111,42 @@ namespace BBPlusAnimations.Patches
 			yield break;
 		}
 
-		internal static SoundObject audSorry;
-
 		internal static GameObject cracks;
+	}
+
+	[AnimationConditionalPatch(ConfigEntryStorage.CATEGORY_NPCs, ConfigEntryStorage.NAME_FIRSTPRIZE_WINDOWHIT, ConfigEntryStorage.DESC_FIRSTPRIZE_WINDOWHIT)]
+	[HarmonyPatch]
+	internal static class FirstPrize_SorryWindowHit
+	{
+		static IEnumerable<CodeInstruction> WallHit(IEnumerable<CodeInstruction> i, ILGenerator ge) =>
+			new CodeMatcher(i, ge)
+			.End()
+			// ************* Make Firstprize say Sorry **************
+			.MatchBack(false,
+				new(OpCodes.Ldarg_0),
+				new(OpCodes.Ldflda, AccessTools.Field(typeof(FirstPrize_Active), "raycastHit")),
+				new(OpCodes.Call, AccessTools.PropertyGetter(typeof(RaycastHit), "transform")),
+				new(OpCodes.Callvirt, AccessTools.Method(typeof(Component), "GetComponent", [], [typeof(Window)])),
+				new(OpCodes.Ldc_I4_1),
+				new(OpCodes.Callvirt, AccessTools.Method(typeof(Window), "Break", [typeof(bool)]))
+				)
+			.InsertAndAdvance(
+				new(OpCodes.Ldarg_0),
+				new(OpCodes.Ldflda, AccessTools.Field(typeof(FirstPrize_Active), "raycastHit")),
+				new(OpCodes.Call, AccessTools.PropertyGetter(typeof(RaycastHit), "transform")),
+				new(OpCodes.Callvirt, AccessTools.Method(typeof(Component), "GetComponent", [], [typeof(Window)])),
+				new(OpCodes.Ldarg_0),
+				CodeInstruction.LoadField(typeof(FirstPrize_StateBase), "firstPrize"),
+				Transpilers.EmitDelegate(BreaksWindow)
+			)
+			.InstructionEnumeration();
+
+		internal static void BreaksWindow(Window w, FirstPrize prize)
+		{
+			if (!w.broken)
+				prize.audMan.QueueAudio(audSorry, true);
+		}
+
+		internal static SoundObject audSorry;
 	}
 }
