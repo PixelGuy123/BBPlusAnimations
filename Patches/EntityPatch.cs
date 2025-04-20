@@ -32,23 +32,18 @@ namespace BBPlusAnimations.Patches
 			.SetInstruction(Transpilers.EmitDelegate((Entity instance) =>
 			{
 				var co = instance.GetComponent<GenericAnimationExtraComponent>();
-				if (instance.BaseHeight >= instance.InternalHeight)
-				{
-					if (co)
-					{
-					if (co.runningAnimation != null)
-						instance.StopCoroutine(co.runningAnimation);
-					}
-					instance.Unsquish();
+				if (co && co.isActive)
 					return;
-				}
+				
 				instance.squishTime = ConfigEntryStorage.CFG_ENTITY_UNSQUISH_TIME_LIMIT.Value;
 				
 				if (co)
 				{
 					if (co.runningAnimation != null)
 						instance.StopCoroutine(co.runningAnimation);
-					co.runningAnimation = instance.StartCoroutine(Animation(instance));
+					
+					co.runningAnimation = instance.StartCoroutine(Animation(instance, co));
+					co.isActive = true;
 				}
 				
 			}))
@@ -60,12 +55,16 @@ namespace BBPlusAnimations.Patches
 		{
 			time -= ConfigEntryStorage.CFG_ENTITY_UNSQUISH_TIME_LIMIT.Value;
 			var co = __instance.GetComponent<GenericAnimationExtraComponent>();
-			if (co && co.runningAnimation != null)
-				__instance.StopCoroutine(co.runningAnimation);
+			if (co)
+			{
+				if (co.runningAnimation != null)
+					__instance.StopCoroutine(co.runningAnimation);
+				co.isActive = false;
+			}
 		}
 
 
-		static IEnumerator Animation(Entity entity)
+		static IEnumerator Animation(Entity entity, GenericAnimationExtraComponent comp)
 		{
 			float timer = ConfigEntryStorage.CFG_ENTITY_UNSQUISH_TIME_LIMIT.Value;
 			float factor = 0f;
@@ -96,6 +95,8 @@ namespace BBPlusAnimations.Patches
 			yield return null;
 			
 			entity.Unsquish();
+			if (comp)
+				comp.isActive = false;
 			yield break;
 		}
 	}
