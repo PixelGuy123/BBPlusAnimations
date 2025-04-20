@@ -223,7 +223,7 @@ namespace BBPlusAnimations
 
 					var col = new GameObject("PlantCollider")
 					{
-						//layer = LayerStorage.ignoreRaycast
+						layer = LayerStorage.ignoreRaycast
 					}.AddComponent<CapsuleCollider>(); // I hate the plant having 2 prefabs >:(
 					col.transform.SetParent(x.renderers[0].transform);
 					col.transform.localPosition = Vector3.up * 5f;
@@ -394,8 +394,7 @@ namespace BBPlusAnimations
 				principalCanvas.transform.localPosition = Vector3.zero;
 			});
 
-
-			yield return "Loading Big Ol\' Boots noises...";
+			yield return "Loading Techno Boots noises...";
 			// Big ol' Boots footsteps
 			var step1 = ObjectCreators.CreateSoundObject(AssetLoader.AudioClipFromFile(Path.Combine(ModPath, GetAssetName("step0.wav"))), string.Empty, SoundType.Effect, Color.white);
 			step1.subtitle = false;
@@ -691,7 +690,7 @@ namespace BBPlusAnimations
 
 			// Baldi Peeking Animation Load
 			yield return "Loading Baldi Peeking Animation...";
-			BaldiPatch_PeekInside.bal_peek_sprites = TextureExtensions.LoadSpriteSheet(9, 8, 30f, ModPath, GetAssetName("IknowYoureThere.png"));
+			BaldiPatch_PeekInside.bal_peek_sprites = TextureExtensions.LoadSpriteSheet(5, 8, 30f, ModPath, GetAssetName("IknowYoureThere.png"));
 
 			yield break;
 		}

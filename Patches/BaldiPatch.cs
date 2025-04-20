@@ -31,11 +31,11 @@ internal static class BaldiPatch_PeekInside{
 		bal.volumeAnimator.enabled = false;
 		bal.animator.enabled = false;
 		float frame = 0f;
-		Vector3 ogRendererPosition = bal.spriteRenderer[0].transform.localPosition;
-		bal.spriteRenderer[0].transform.localPosition = Vector3.up;
 
 		yield return null;
 		bal.Navigator.Entity.Teleport(expectedPosition);
+		Vector3 ogRendererPosition = bal.spriteRenderer[0].transform.localPosition;
+		bal.spriteRenderer[0].transform.localPosition = Vector3.up;
 
 		while (bal.transform.position.ZeroOutY() == expectedPosition && locker.playerInside){
 			frame += Time.deltaTime * fixedSpeed * bal.TimeScale;
@@ -51,7 +51,7 @@ internal static class BaldiPatch_PeekInside{
 
 	internal static Sprite[] bal_peek_sprites;
 
-	const float fixedSpeed = 24f;
+	const float fixedSpeed = 13.25f;
 
 }
 

@@ -75,7 +75,7 @@ namespace BBPlusAnimations.Patches
 					{
 						var crack = Object.Instantiate(cracks);
 
-						Vector3 pos = hit.transform.position - (f.transform.forward * 0.03f);
+						Vector3 pos = hit.transform.position;
 						pos.y = f.transform.position.y;
 						crack.transform.position = pos;
 

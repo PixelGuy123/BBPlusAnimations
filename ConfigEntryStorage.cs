@@ -97,6 +97,7 @@ namespace BBPlusAnimations
 			NAME_POINTS_PARTICLES = "YTP EXPLOSION", DESC_POINTS_PARTICLES = $"{TRUE_CDT}, collecting a YTP will make it \"explode\".",
 			NAME_PORTAL_POSTER_ANIMATION = "PORTAL POSTER ROTATION", DESC_PORTAL_POSTER_ANIMATION = $"{TRUE_CDT}, portal posters will always be seen rotating when placed in a wall.",
 			NAME_CHALKERASER_VISUAL = "CHALKERASER VISIBLE", DESC_CHALKERASER_VISUAL = $"{TRUE_CDT}, the chalk eraser will have an animation when being used.",
+			NAME_WHISTLE_ANIMATION = "WHISTLE ANIMATION", DESC_WHISTLE_ANIMATION = $"{TRUE_CDT}, the whistle will be displayed in-screen when used.",
 
 			// ===============================================
 			CATEGORY_ENVIRONMENT = "ANIMATIONS FOR ENVIRONMENT",
