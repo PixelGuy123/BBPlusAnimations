@@ -2,7 +2,8 @@
 using HarmonyLib;
 using UnityEngine;
 
-namespace BBPlusAnimations.Patches;
+namespace BBPlusAnimations.Patches; 
+// FIX BALDI APPLE INTERACTION BREAKING BALDI
 	
 [AnimationConditionalPatch(ConfigEntryStorage.CATEGORY_NPCs, ConfigEntryStorage.NAME_BALDI_PEEK_LOCKER, ConfigEntryStorage.DESC_BALDI_PEEK_LOCKER)]
 [HarmonyPatch]
@@ -37,7 +38,7 @@ internal static class BaldiPatch_PeekInside{
 		Vector3 ogRendererPosition = bal.spriteRenderer[0].transform.localPosition;
 		bal.spriteRenderer[0].transform.localPosition = Vector3.up;
 
-		while (bal.transform.position.ZeroOutY() == expectedPosition && locker.playerInside){
+		while (bal.transform.position.ZeroOutY() == expectedPosition && locker.playerInside && bal.behaviorStateMachine.currentState is Baldi_OpenLocker){
 			frame += Time.deltaTime * fixedSpeed * bal.TimeScale;
 			if (frame >= bal_peek_sprites.Length){
 				break;
