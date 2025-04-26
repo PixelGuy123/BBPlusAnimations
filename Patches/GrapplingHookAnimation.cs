@@ -6,16 +6,28 @@ using PixelInternalAPI.Extensions;
 namespace BBPlusAnimations.Patches
 {
 	[HarmonyPatch(typeof(ITM_GrapplingHook))]
+	internal static class GrapplingHook_FOVAdder{ // Required to avoid crashes with both patches below
+		[HarmonyPatch("Use")]
+		[HarmonyPrefix]
+		private static void Setup(ITM_GrapplingHook __instance)
+		{
+			if (__instance.GetComponent<GrapplingHookFOVHolder>() == null)
+				__instance.gameObject.AddComponent<GrapplingHookFOVHolder>();
+		}
+	}
+
+	[HarmonyPatch(typeof(ITM_GrapplingHook))]
 	[AnimationConditionalPatch(ConfigEntryStorage.CATEGORY_ITEMS, ConfigEntryStorage.NAME_GRAPPLINGHOOK_FOV, ConfigEntryStorage.DESC_GRAPPLINGHOOK_FOV)]
-	internal class GrapplingHookAnimation_FOV
+	internal static class GrapplingHookAnimation_FOV
 	{
 
 		[HarmonyPatch("Use")]
 		[HarmonyPrefix]
 		private static void Setup(ITM_GrapplingHook __instance, PlayerManager pm)
 		{
-			var h = __instance.gameObject.AddComponent<GrapplingHookFOVHolder>();
-			pm.GetCustomCam().AddModifier(h.modifier);
+			var h = __instance.gameObject.GetComponent<GrapplingHookFOVHolder>();
+			pm.GetCustomCam()?
+			.AddModifier(h.modifier);
 		}
 
 		[HarmonyPatch("Update")]
@@ -40,7 +52,7 @@ namespace BBPlusAnimations.Patches
 		{
 			var cam = Singleton<CoreGameManager>.Instance.GetCamera(___pm.playerNumber);
 			var comp = __instance.GetComponent<GrapplingHookFOVHolder>();
-			cam.GetCustomCam().ResetSlideFOVAnimation(comp.modifier, 3f);
+			cam.GetCustomCam()?.ResetSlideFOVAnimation(comp.modifier, 3f);
 			comp.deadLocked = true; // to not be active in Update()
 
 			___lineRenderer.enabled = false;

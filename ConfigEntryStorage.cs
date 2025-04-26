@@ -107,8 +107,9 @@ namespace BBPlusAnimations
 			NAME_ENTITY_UNSQUISH_TIME_LIMIT = "UNSQUISH INDICATION", DESC_ENTITY_UNSQUISH_TIME_LIMIT = $"When the entity is about to be unsquished, this time offset will point out how early will the unsquishing animation plays." +
 																									   $"\nFor example, if the entity is squished for 15 seconds and this offset is set to 5, the entity will \"start unsquishing\" in the last 5 seconds.\n" +
 																									   SET_ZERO,
+			NAME_DOOR_LOCK = "DOOR VISIBLE LOCK", DESC_DOOR_LOCK = $"{TRUE_CDT}, the doors will display a swinging door lock when locked.",
 			NAME_ELEVATOR_GATEHIT = "ELEVATOR GATE BUMP", DESC_ELEVATOR_GATEHIT = $"{TRUE_CDT}, the elevator\'s gate will bounce a little before lying on the floor.",
-			NAME_FLIPPER_EXPLOSION = "GRAVITY FLIPPER EXPLOSION", DESC_FLIPPER_EXPLOSION = $"{TRUE_CDT}, Gravity Flippers will explode with particles.",
+			//NAME_FLIPPER_EXPLOSION = "GRAVITY FLIPPER EXPLOSION", DESC_FLIPPER_EXPLOSION = $"{TRUE_CDT}, Gravity Flippers will explode with particles.",
 			NAME_GUM_SPLASH = "GUM SPLASH", DESC_GUM_SPLASH = $"{TRUE_CDT}, the gum will literally splat into a wall.",
 			NAME_HIDEABLELOCKER_INTERACTION = "HIDEABLE LOCKER INTERACT", DESC_HIDEABLELOCKER_INTERACTION = $"{TRUE_CDT}, the blue lockers will slightly open when selecting them.",
 			NAME_NUMBALL_SPAWN = "NUMBER BALLOON SPAWN", DESC_NUMBALL_SPAWN = $"{TRUE_CDT}, the Number Balloon literally inflates when spawning.",

@@ -7,7 +7,7 @@ using UnityEngine;
 namespace BBPlusAnimations.Patches
 {
 	[HarmonyPatch(typeof(StandardDoor))]
-	[AnimationConditionalPatch(ConfigEntryStorage.CATEGORY_ENVIRONMENT, ConfigEntryStorage.NAME_HIDEABLELOCKER_INTERACTION, ConfigEntryStorage.DESC_HIDEABLELOCKER_INTERACTION)]
+	[AnimationConditionalPatch(ConfigEntryStorage.CATEGORY_ENVIRONMENT, ConfigEntryStorage.NAME_DOOR_LOCK, ConfigEntryStorage.DESC_DOOR_LOCK)]
 	public class StandardDoorPatches
 	{
 		[HarmonyPatch("Start")]
