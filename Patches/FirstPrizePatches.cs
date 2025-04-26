@@ -75,7 +75,7 @@ namespace BBPlusAnimations.Patches
 					{
 						var crack = Object.Instantiate(cracks);
 
-						Vector3 pos = hit.transform.position;
+						Vector3 pos = hit.transform.position + hit.normal * 0.05f; // Small normal offset to avoid z-fighting the wall
 						pos.y = f.transform.position.y;
 						crack.transform.position = pos;
 
