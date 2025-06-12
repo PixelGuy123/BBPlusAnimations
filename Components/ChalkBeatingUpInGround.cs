@@ -12,9 +12,14 @@ namespace BBPlusAnimations.Components
 
 		void Start()
 		{
+			if (renderer == null || GetComponent<ChalkEraser>() == null)
+			{
+				Destroy(gameObject);
+				return;
+			}
 			UpdatePos();
 		}
-		
+
 		void Update()
 		{
 			var emission = particles.emission;
@@ -44,11 +49,11 @@ namespace BBPlusAnimations.Components
 				}
 			}
 			else
-			{ 
+			{
 				transform.localPosition = Vector3.SmoothDamp(transform.localPosition, targetPos, ref velocity, time);
 				if ((transform.localPosition - targetPos).magnitude <= 0.1f)
 					reset = true;
-				
+
 			}
 		}
 		void UpdatePos() =>

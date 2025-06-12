@@ -1,4 +1,6 @@
-﻿using BBPlusAnimations.Components;
+﻿using System.Collections;
+using System.IO;
+using BBPlusAnimations.Components;
 using BBPlusAnimations.Patches;
 using BepInEx;
 using BepInEx.Configuration;
@@ -10,8 +12,6 @@ using MTM101BaldAPI.Registers;
 using PixelInternalAPI.Classes;
 using PixelInternalAPI.Components;
 using PixelInternalAPI.Extensions;
-using System.Collections;
-using System.IO;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -52,7 +52,8 @@ namespace BBPlusAnimations
 
 		IEnumerator OnAssetLoad()
 		{
-			ParticleSystem GetParticleObj(string name, out ParticleSystemRenderer renderer){
+			ParticleSystem GetParticleObj(string name, out ParticleSystemRenderer renderer)
+			{
 				var particle = Instantiate(man.Get<ParticleSystem>("particlePrefab"));
 				var obj = particle.gameObject;
 				particle.name = name;
@@ -61,7 +62,7 @@ namespace BBPlusAnimations
 
 				particle = obj.AddComponent<ParticleSystem>(); // Addds a new fresh ParticleSystem to have everything set to default values
 				renderer = obj.GetComponent<ParticleSystemRenderer>();
-				renderer.material = new(renderer.material) 
+				renderer.material = new(renderer.material)
 				{
 					name = $"{name}_Mat"
 				};
@@ -241,7 +242,7 @@ namespace BBPlusAnimations
 				});
 			}
 
-			
+
 			// Tape Player revert state
 
 			// The editor somehow breaks Resources
@@ -312,9 +313,9 @@ namespace BBPlusAnimations
 			color.color = new Gradient()
 			{
 				alphaKeys = [
-					new GradientAlphaKey(0f, 0f), 
-					new GradientAlphaKey(1f, 0.35f), 
-					new GradientAlphaKey(1f, 0.85f), 
+					new GradientAlphaKey(0f, 0f),
+					new GradientAlphaKey(1f, 0.35f),
+					new GradientAlphaKey(1f, 0.85f),
 					new GradientAlphaKey(0f, 1f)
 					],
 			};
@@ -742,7 +743,7 @@ namespace BBPlusAnimations
 
 		public const string PLUGIN_NAME = "BB+ New Animations";
 
-		public const string PLUGIN_VERSION = "1.3.1";
+		public const string PLUGIN_VERSION = "1.3.2";
 	}
 
 	internal static class ConfigExtensions
