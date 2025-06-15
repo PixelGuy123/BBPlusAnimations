@@ -1,6 +1,6 @@
-﻿using BBPlusAnimations.Components;
+﻿using System.Collections;
+using BBPlusAnimations.Components;
 using HarmonyLib;
-using System.Collections;
 using UnityEngine;
 
 namespace BBPlusAnimations.Patches
@@ -21,7 +21,7 @@ namespace BBPlusAnimations.Patches
 		private static bool Prefix(Jumprope __instance, Animator ___animator, Canvas ___ropeCanvas, ref MovementModifier ___moveMod, Canvas ___textCanvas)
 		{
 			var comp = __instance.GetComponent<GenericAnimationExtraComponent>();
-			if (comp && comp.isActive) // Quick fix to not show the animation on the wrong moment
+			if (!comp || comp.isActive) // Quick fix to not show the animation on the wrong moment
 				return true;
 
 			__instance.player.plm.am.moveMods.Remove(___moveMod);

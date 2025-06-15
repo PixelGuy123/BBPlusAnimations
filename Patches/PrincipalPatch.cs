@@ -1,12 +1,12 @@
-﻿using HarmonyLib;
+﻿using System.Collections;
 using System.Collections.Generic;
-using UnityEngine;
 using System.Reflection.Emit;
-using System.Collections;
+using HarmonyLib;
+using UnityEngine;
 
 namespace BBPlusAnimations.Patches
 {
-    [AnimationConditionalPatch(ConfigEntryStorage.CATEGORY_NPCs, ConfigEntryStorage.NAME_PRINCIPAL_WHISTLE_ANIMATION, ConfigEntryStorage.DESC_PRINCIPAL_WHISTLE_ANIMATION)]
+	[AnimationConditionalPatch(ConfigEntryStorage.CATEGORY_NPCs, ConfigEntryStorage.NAME_PRINCIPAL_WHISTLE_ANIMATION, ConfigEntryStorage.DESC_PRINCIPAL_WHISTLE_ANIMATION)]
 	[HarmonyPatch(typeof(Principal))]
 	internal static class PrincipalWhistlePatch
 	{
@@ -85,7 +85,8 @@ namespace BBPlusAnimations.Patches
 		[HarmonyPrefix]
 		static void CoolDetentionAnimation(Principal __instance)
 		{
-			if (__instance.ec.offices.Count > 0)
+			// Checks for Character to avoid other mods that inherits Principal himself
+			if (allowedPrincipals.Contains(__instance.Character) && __instance.ec.offices.Count > 0)
 				__instance.StartCoroutine(DetentionAnimation(__instance.spriteRenderer[0], __instance));
 		}
 
@@ -103,5 +104,9 @@ namespace BBPlusAnimations.Patches
 		}
 
 		internal static Sprite[] sprites;
+
+		public static void AddPrincipalChar(Character ch) => allowedPrincipals.Add(ch);
+
+		internal static HashSet<Character> allowedPrincipals = [Character.Principal];
 	}
 }
