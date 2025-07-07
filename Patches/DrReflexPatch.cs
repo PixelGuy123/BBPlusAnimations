@@ -1,7 +1,7 @@
-﻿using BBPlusAnimations.Components;
-using HarmonyLib;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Reflection.Emit;
+using BBPlusAnimations.Components;
+using HarmonyLib;
 
 namespace BBPlusAnimations.Patches
 {
@@ -10,7 +10,7 @@ namespace BBPlusAnimations.Patches
 	internal static class DrReflexPatch
 	{
 		[HarmonyPatch("Initialize")]
-		[HarmonyPrefix]
+		[HarmonyPostfix]
 		static void InitHammer(DrReflex __instance) =>
 			__instance.GetComponent<DrReflexHammerComponent>()?.Init(__instance.transform.position);
 
@@ -23,15 +23,17 @@ namespace BBPlusAnimations.Patches
 		[HarmonyTranspiler]
 		static IEnumerable<CodeInstruction> ResetHammer(IEnumerable<CodeInstruction> i) =>
 			new CodeMatcher(i)
-			.MatchForward(false, 
+			.MatchForward(false,
 				new(OpCodes.Ldloc_1),
 				new(CodeInstruction.LoadField(typeof(DrReflex), "audioManager")),
 				new(OpCodes.Ldloc_1),
 				new(CodeInstruction.LoadField(typeof(DrReflex), "audNotBad")),
 				new(OpCodes.Callvirt, AccessTools.Method(typeof(AudioManager), "QueueAudio", [typeof(SoundObject)]))
 				)
-			.Insert(new(OpCodes.Ldloc_1), 
-				Transpilers.EmitDelegate<System.Action<DrReflex>>(x => x.GetComponent<DrReflexHammerComponent>()?.HideHammer(false)))
+			.InsertAndAdvance(
+				new(OpCodes.Ldloc_1), // Get DrReflex instance
+				Transpilers.EmitDelegate<System.Action<DrReflex>>(x => x.GetComponent<DrReflexHammerComponent>()?.HideHammer(false))
+				)
 			.InstructionEnumeration();
 	}
 }

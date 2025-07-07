@@ -20,8 +20,11 @@ namespace BBPlusAnimations.Patches
 
 		[HarmonyPatch(typeof(Playtime), "EndCooldown")]
 		[HarmonyPrefix]
-		static void PlayTimeResetAnimator(Animator ___animator) =>
-			___animator.enabled = true;
+		static void PlayTimeResetAnimator(Playtime __instance, Animator ___animator)
+		{
+			if (__instance.GetComponent<GenericAnimationExtraComponent>())
+				___animator.enabled = true;
+		}
 
 		[HarmonyPatch(typeof(Playtime), "EndJumprope")]
 		[HarmonyPrefix]
@@ -29,8 +32,10 @@ namespace BBPlusAnimations.Patches
 		{
 			var comp = __instance.GetComponent<GenericAnimationExtraComponent>();
 			if (comp)
+			{
 				comp.isActive = won;
-			__instance.animator.enabled = !won;
+				__instance.animator.enabled = !won;
+			}
 		}
 	}
 }

@@ -44,8 +44,8 @@ namespace BBPlusAnimations
 			ModPath = AssetLoader.GetModPath(this);
 			AssetLoader.LoadLocalizationFolder(Path.Combine(ModPath, "Language", "English"), Language.English);
 
-			LoadingEvents.RegisterOnAssetsLoaded(Info, OnAssetLoad(), false);
-			LoadingEvents.RegisterOnAssetsLoaded(Info, OnAssetLoadPost(), true);
+			LoadingEvents.RegisterOnAssetsLoaded(Info, OnAssetLoad(), LoadingEventOrder.Pre);
+			LoadingEvents.RegisterOnAssetsLoaded(Info, OnAssetLoadPost(), LoadingEventOrder.Post);
 
 			ConfigEntryStorage.InitializeConfigs(Config);
 		}
@@ -507,7 +507,7 @@ namespace BBPlusAnimations
 			hammer.gameObject.ConvertToPrefab(true);
 			hammer.name = "ReflexHammer";
 			hammerRenderer.name = "ReflexHammer_Renderer";
-			hammer.gameObject.AddComponent<PickupBob>();
+			hammerRenderer.gameObject.AddComponent<PickupBob>();
 
 			GenericExtensions.FindResourceObjects<DrReflex>().Do(x => x.gameObject.AddComponent<DrReflexHammerComponent>().hammerPre = hammer.transform);
 
@@ -743,7 +743,7 @@ namespace BBPlusAnimations
 
 		public const string PLUGIN_NAME = "BB+ New Animations";
 
-		public const string PLUGIN_VERSION = "1.3.2.1";
+		public const string PLUGIN_VERSION = "1.3.2.2";
 	}
 
 	internal static class ConfigExtensions
